@@ -12,9 +12,25 @@ class PanelGeometryTest {
         val fitted = PanelGeometry.fit(preference, aboveKeyboard, 1f)
         assertTrue(fitted.y >= aboveKeyboard.top)
         assertTrue(fitted.y + fitted.height <= aboveKeyboard.bottom)
-        assertTrue(fitted.height < aboveKeyboard.height)
+        assertTrue(fitted.height <= aboveKeyboard.height)
         assertEquals(before, PanelGeometry.fit(preference, full, 1f))
         assertEquals(480f, preference.height, 0f)
+    }
+    @Test fun defaultLayoutStaysStillAcrossKeyboardOpenCloseAndAnimationFrames() {
+        for (density in listOf(1f, 2f, 3f)) for (settings in listOf(false, true)) {
+            val full = PanelViewport(10, 30, (410 * density).toInt(), (820 * density).toInt())
+            val preference = PanelGeometry.default(full, density, settings)
+            val original = PanelGeometry.fit(preference, full, density)
+            for (bottomDp in listOf(800, 700, 600, 500, 430, 500, 600, 820)) {
+                val next = PanelViewport(full.left, full.top, full.right, (bottomDp * density).toInt(), bottomDp < 820)
+                assertEquals(original, PanelGeometry.fit(preference, next, density))
+            }
+        }
+    }
+    @Test fun rememberedLayoutThatFitsIsNotResizedJustBecauseKeyboardIsVisible() {
+        val preference = PanelLayout(320f, 300f, 10f, 20f)
+        assertEquals(PanelGeometry.fit(preference, PanelViewport(10, 30, 410, 900), 1f),
+            PanelGeometry.fit(preference, PanelViewport(10, 30, 410, 430, true), 1f))
     }
     @Test fun oversizedAndOffscreenLayoutRemainsReachableAfterDisplaySizeChange() {
         val fitted = PanelGeometry.fit(PanelLayout(2000f, 3000f, 900f, 2000f), PanelViewport(10, 20, 330, 600), 1f)

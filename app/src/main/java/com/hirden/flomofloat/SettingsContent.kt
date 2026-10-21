@@ -33,7 +33,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         orientation = VERTICAL
         addAppearance()
         val layoutCard = card("展开窗口布局")
-        Ui.add(layoutCard, Ui.text(context, "拖动顶部圆点移动，拖动右下角缩放。尺寸与位置自动保存在本机，笔记 / 设置及横竖屏分别记忆。输入法出现时临时避让，收起后恢复。", 12f, Ui.muted), 6)
+        Ui.add(layoutCard, Ui.text(context, "拖动顶部圆点移动，拖动右下角缩放。尺寸与位置自动保存在本机，笔记 / 设置及横竖屏分别记忆。默认窗口位于上方，为键盘留出空间；只有确实放不下时才临时调整。点正文开始输入，点到窗外即可输入其他应用。", 12f, Ui.muted), 6)
         Ui.add(layoutCard, Ui.button(context, "重置窗口布局") {
             runCatching { store.resetPanelLayouts() }.onSuccess { toast("窗口大小和位置已重置，草稿、API 和标签保留") }
                 .onFailure { toast("重置失败，请重试") }

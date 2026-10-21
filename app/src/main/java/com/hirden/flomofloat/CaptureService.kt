@@ -22,7 +22,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -40,6 +39,7 @@ import com.petterp.floatingx.core.layout.FxAnchor
 import com.petterp.floatingx.core.storage.FxSpStorage
 import com.petterp.floatingx.system.permission.FxPermissionStrategy
 import com.petterp.floatingx.system.systemHost
+import com.petterp.floatingx.system.container.FxWindowContainer
 
 class CaptureService : Service() {
     private lateinit var store: LocalStore
@@ -51,6 +51,7 @@ class CaptureService : Service() {
     }
     private var editor: FxControl? = null
     private var panelLayout: PanelWindowController? = null
+    private var panelInput: OverlayInputController? = null
     private var input: EditText? = null
     private var tags: EditText? = null
     private var status: TextView? = null
@@ -191,7 +192,7 @@ class CaptureService : Service() {
         Ui.add(body, chips, 4)
         count = Ui.text(this, "${draft.text.length} 字 · 草稿自动保存", 11f, Ui.muted)
         Ui.add(body, count!!, 9)
-        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else "空白处轻左滑或双击，即可收起", 11f, Ui.muted)
+        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else "点正文输入 · 空白处轻左滑或双击收起", 11f, Ui.muted)
         Ui.add(body, status!!, 5)
         val footer = Ui.row(this)
         footer.addView(Ui.button(this, "设置") { showSettings() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)))
@@ -210,7 +211,6 @@ class CaptureService : Service() {
         }
         input!!.addTextChangedListener(watcher); tags!!.addTextChangedListener(watcher)
         restoring = false; showPanel(shell); updateBusy(); refreshChips()
-        if (!SendManager.busy) input?.postDelayed({ input?.let { field -> field.requestFocus(); (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(field, InputMethodManager.SHOW_IMPLICIT) } }, 180)
     }
     private fun showSettings() {
         if (!saveDraft()) return
@@ -241,14 +241,21 @@ class CaptureService : Service() {
             gesture { click = false; longPress = false; drag = FxDrag.DISABLED }
             systemHost(applicationContext) {
                 permission(FxPermissionStrategy.skip())
-                keyboard(R.id.note_input, R.id.note_tags, R.id.api_input, R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed)
                 layoutParams {
-                    it.flags = it.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv() and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS.inv()
+                    it.flags = (it.flags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS.inv()) or
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
                     it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
                 }
                 onBackPressed { if (settingsPage) { closePanel(); expand() } else collapse(); true }
             }
-        }.also { it.show(); layout.attach(it) }
+        }.also {
+            it.show(); layout.attach(it)
+            panelInput = (shell.parent as? FxWindowContainer)?.let { container ->
+                OverlayInputController(container, intArrayOf(R.id.note_input, R.id.note_tags, R.id.api_input,
+                    R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed))
+            }
+        }
     }
     private fun refreshChips() {
         val selected = NoteProtocol.tags(tags?.text.toString()).split(" ").toSet()
@@ -274,8 +281,8 @@ class CaptureService : Service() {
         sendButton?.alpha = if (SendManager.busy) .6f else 1f
     }
     private fun closePanel() {
+        panelInput?.close(); panelInput = null
         panelLayout?.close(); panelLayout = null
-        editor?.contentView?.findFocus()?.let { (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(it.windowToken, 0) }
         editor?.cancel(); editor = null
         input = null; tags = null; status = null; count = null; sendButton = null; chipButtons.clear()
     }

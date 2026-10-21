@@ -13,7 +13,7 @@ import android.widget.Toast
 import androidx.core.view.ViewCompat
 import com.petterp.floatingx.core.FxControl
 
-/** App-owned geometry; FloatingX still owns the window and keyboard focus lifecycle. */
+/** App-owned geometry; FloatingX owns the window lifecycle. */
 class PanelWindowController(private val context: Context, private val store: LocalStore,
     private val shell: View, private val settings: Boolean
 ) {

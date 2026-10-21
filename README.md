@@ -7,7 +7,7 @@
 Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
-- 当前源码版本：**0.4.0 测试版**，支持 Android 8.0 及以上；下载页当前分发版本以页面为准
+- 当前源码版本：**0.4.1 测试版**，支持 Android 8.0 及以上；下载页当前分发版本以页面为准
 - 许可：[MIT](LICENSE)
 - [下载入墨](https://rumo.hirkond.online) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
 
@@ -27,7 +27,8 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 | 本地草稿 | 自动保存，发送失败保留；成功后清除对应草稿 |
 | 悬浮设置 | 在原窗口修改设置，返回继续编辑 |
 | 窗口布局 | 顶部圆点拖动位置、右下角拖动缩放，笔记 / 设置与横竖屏分别记忆 |
-| 输入法避让 | 普通底部键盘出现时临时缩小并限制在键盘上方，收起键盘后恢复；正文和标签可滚动 |
+| 稳定布局 | 默认窗口位于上方，为底部键盘预留空间；已经放得下的布局在键盘开合时保持不动，放不下才临时调整 |
+| 输入焦点 | 点击入墨输入框才获取输入焦点，点击窗外后可继续输入其他 APP；再点正文即可继续记笔记 |
 | 重置布局 | 标题栏“重置”或设置中的“重置窗口布局”，恢复尺寸和位置，保留草稿、API 和标签 |
 | 应用内更新 | 检查、下载和系统确认安装；复用任务和已校验文件 |
 
@@ -45,6 +46,8 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 已有 0.2.0 / 0.3.0 用户，请在“设置 → 版本与更新”中将更新源保存为 `https://rumo.hirkond.online/latest.json`。本次域名迁移保留原 0.3.0 安装包与签名，不需要重新安装。
 
 展开后拖动左上方圆点可移动窗口，拖动右下角斜线可改变宽高，松手后自动保存。输入法避让不会覆盖记住的大小；浮动 / 分离式输入法可能不提供占用区域信息，可手动移动或缩放窗口。点击标题栏“重置”会清除笔记、设置两类窗口的横竖屏布局记忆。
+
+0.4.1 展开窗口后，点击正文才弹出输入法；点到窗外会释放输入焦点，窗口和草稿保留。新默认窗口更紧凑并位于上方，通常无需随键盘开合调整。旧版手动保存的布局会保留，点击一次“重置”可应用新默认布局。
 
 ## 数据与网络
 
