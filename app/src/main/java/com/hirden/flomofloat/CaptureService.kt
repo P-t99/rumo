@@ -47,8 +47,10 @@ class CaptureService : Service() {
     private var appliedAppearance: FloatingAppearance? = null
     private val appearanceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "overlay_mode" || key == "overlay_transparency") applyAppearance()
+        if (key == "layout_reset_revision") panelLayout?.reset()
     }
     private var editor: FxControl? = null
+    private var panelLayout: PanelWindowController? = null
     private var input: EditText? = null
     private var tags: EditText? = null
     private var status: TextView? = null
@@ -131,25 +133,33 @@ class CaptureService : Service() {
         }
     }
     private fun shell(isSettings: Boolean): SwipeLayout {
-        val metrics = resources.displayMetrics
-        val width = minOf(metrics.widthPixels - Ui.dp(this, 20), Ui.dp(this, 420)).coerceAtLeast(1)
-        val height = if (isSettings) minOf(Ui.dp(this, 510), (metrics.heightPixels * .66f).toInt())
-            else minOf(Ui.dp(this, 420), (metrics.heightPixels * .58f).toInt())
         return SwipeLayout(this) { collapse() }.apply {
-            setPadding(Ui.dp(this@CaptureService, 16), Ui.dp(this@CaptureService, 14), Ui.dp(this@CaptureService, 16), Ui.dp(this@CaptureService, 12))
+            setPadding(Ui.dp(this@CaptureService, 12), Ui.dp(this@CaptureService, 6), Ui.dp(this@CaptureService, 12), Ui.dp(this@CaptureService, 6))
             background = Ui.shape(this@CaptureService, if (isSettings) Ui.bg else Color.WHITE, 16, Ui.line)
             elevation = Ui.dp(this@CaptureService, 12).toFloat()
-            layoutParams = ViewGroup.LayoutParams(width, height.coerceAtLeast(Ui.dp(this@CaptureService, 180)))
+            layoutParams = ViewGroup.LayoutParams(Ui.dp(this@CaptureService, 360), Ui.dp(this@CaptureService, 360))
         }
     }
+    private fun addPanelHeader(shell: SwipeLayout, title: String) {
+        val header = Ui.row(this)
+        header.addView(panelHandle(resize = false), LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40)))
+        header.addView(Ui.text(this, title, 18f, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(Ui.button(this, "重置") {
+            runCatching { store.resetPanelLayouts() }.onSuccess {
+                Toast.makeText(this, "窗口布局已重置，草稿保留", Toast.LENGTH_SHORT).show()
+            }.onFailure { Toast.makeText(this, "重置失败，请重试", Toast.LENGTH_SHORT).show() }
+        }.apply { id = R.id.reset_panel_layout; textSize = 12f; minWidth = 0; minimumWidth = 0; setPadding(0, 0, 0, 0); contentDescription = "重置窗口大小和位置" },
+            LinearLayout.LayoutParams(Ui.dp(this, 52), Ui.dp(this, 40)))
+        Ui.add(shell, header, height = Ui.dp(this, 40))
+    }
+    private fun panelHandle(resize: Boolean) = PanelHandleView(this, resize,
+        begin = { panelLayout?.begin(resize) }, change = { x, y -> panelLayout?.change(x, y) }, finish = { panelLayout?.finish(it) }
+    ).apply { id = if (resize) R.id.resize_handle else R.id.drag_handle }
     private fun expand() {
         if (editor != null) return
         settingsPage = false; bubble?.hide(); restoring = true
         val shell = shell(false)
-        val header = Ui.row(this)
-        header.addView(Ui.text(this, "随手记", 18f, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(Ui.text(this, "入墨 → flomo", 11f, Ui.muted))
-        Ui.add(shell, header)
+        addPanelHeader(shell, "随手记")
         val bodyScroll = ScrollView(this).apply { isFillViewport = true }
         val body = Ui.column(this); bodyScroll.addView(body)
         shell.addView(bodyScroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -157,7 +167,7 @@ class CaptureService : Service() {
         input = Ui.edit(this, "此刻，有什么想法？").apply {
             id = R.id.note_input; contentDescription = "笔记正文"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            gravity = Gravity.TOP or Gravity.START; minLines = 4; maxLines = 8; textSize = 17f
+            gravity = Gravity.TOP or Gravity.START; minLines = 2; maxLines = 8; textSize = 17f
             background = null; setPadding(0, Ui.dp(this@CaptureService, 12), 0, Ui.dp(this@CaptureService, 8))
             setText(draft.text); setSelection(length())
         }
@@ -186,13 +196,13 @@ class CaptureService : Service() {
         val footer = Ui.row(this)
         footer.addView(Ui.button(this, "设置") { showSettings() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)))
         footer.addView(Ui.button(this, "收起") { collapse() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)).apply { leftMargin = Ui.dp(this@CaptureService, 5) })
-        footer.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
         sendButton = Ui.button(this, "存入 flomo", true) {
             if (!saveDraft()) return@button
             SendManager.send(this)?.let { status?.text = it; status?.setTextColor(Ui.red) }
         }.apply { textSize = 14f; minWidth = 0; minimumWidth = 0 }
-        footer.addView(sendButton, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)))
-        Ui.add(shell, footer, 11)
+        footer.addView(sendButton, LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1f).apply { leftMargin = Ui.dp(this@CaptureService, 6) })
+        footer.addView(panelHandle(resize = true), LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 46)))
+        Ui.add(shell, footer, 6)
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { if (!restoring) { saveDraft(); refreshChips() } }
@@ -206,7 +216,7 @@ class CaptureService : Service() {
         if (!saveDraft()) return
         closePanel(); settingsPage = true
         val shell = shell(true)
-        Ui.add(shell, Ui.text(this, "设置", 18f, bold = true))
+        addPanelHeader(shell, "设置")
         val scroll = ScrollView(this)
         scroll.addView(SettingsContent(this, store) {
             // Launch while this overlay remains visible; only then collapse it.
@@ -219,12 +229,15 @@ class CaptureService : Service() {
         val footer = Ui.row(this)
         footer.addView(Ui.button(this, "返回笔记", true) { closePanel(); expand() }, LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1f))
         footer.addView(Ui.button(this, "收起") { collapse() }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)).apply { leftMargin = Ui.dp(this@CaptureService, 8) })
-        Ui.add(shell, footer, 10); showPanel(shell)
+        footer.addView(panelHandle(resize = true), LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 46)))
+        Ui.add(shell, footer, 6); showPanel(shell)
     }
     private fun showPanel(shell: View) {
+        val layout = PanelWindowController(this, store, shell, settingsPage)
+        panelLayout = layout
         editor = FloatingX.install(EDITOR) {
-            view(shell); anchor(FxGravity.TOP_CENTER, dy = Ui.dp(this@CaptureService, 28).toFloat())
-            margin(top = Ui.dp(this@CaptureService, 12).toFloat(), bottom = Ui.dp(this@CaptureService, 10).toFloat())
+            view(shell); safeArea = false
+            anchor(FxGravity.TOP_START, dx = layout.frame.x.toFloat(), dy = layout.frame.y.toFloat())
             gesture { click = false; longPress = false; drag = FxDrag.DISABLED }
             systemHost(applicationContext) {
                 permission(FxPermissionStrategy.skip())
@@ -235,7 +248,7 @@ class CaptureService : Service() {
                 }
                 onBackPressed { if (settingsPage) { closePanel(); expand() } else collapse(); true }
             }
-        }.also { it.show() }
+        }.also { it.show(); layout.attach(it) }
     }
     private fun refreshChips() {
         val selected = NoteProtocol.tags(tags?.text.toString()).split(" ").toSet()
@@ -261,6 +274,7 @@ class CaptureService : Service() {
         sendButton?.alpha = if (SendManager.busy) .6f else 1f
     }
     private fun closePanel() {
+        panelLayout?.close(); panelLayout = null
         editor?.contentView?.findFocus()?.let { (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(it.windowToken, 0) }
         editor?.cancel(); editor = null
         input = null; tags = null; status = null; count = null; sendButton = null; chipButtons.clear()

@@ -5,4 +5,5 @@
     <item name="default_tags" type="id" /><item name="update_feed" type="id" />
     <item name="mode_edge" type="id" /><item name="mode_ball" type="id" />
     <item name="floating_transparency" type="id" />
+    <item name="resize_handle" type="id" /><item name="reset_panel_layout" type="id" />
 </resources>

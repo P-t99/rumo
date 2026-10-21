@@ -74,7 +74,7 @@ class SwipeLayout(context: Context, private val collapse: () -> Unit) : LinearLa
     }
     override fun performClick(): Boolean = super.performClick()
     private fun controlAt(view: View, x: Float, y: Float, includeButtons: Boolean): Boolean {
-        if (view is EditText || view is android.widget.AbsSeekBar) return true
+        if (view is EditText || view is android.widget.AbsSeekBar || view is PanelHandleView) return true
         if (includeButtons && view !is ViewGroup && view.isClickable) return true
         if (view is ViewGroup) for (i in view.childCount - 1 downTo 0) {
             val child = view.getChildAt(i)

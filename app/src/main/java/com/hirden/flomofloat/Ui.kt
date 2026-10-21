@@ -45,6 +45,7 @@ object Ui {
     }
     fun edit(c: Context, hint: String): EditText = EditText(c).apply {
         this.hint = hint; textSize = 15f; setTextColor(ink); setHintTextColor(muted)
+        imeOptions = android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI or android.view.inputmethod.EditorInfo.IME_FLAG_NO_FULLSCREEN
         background = shape(c, Color.rgb(248, 250, 247), 12, line)
         setPadding(dp(c, 13), dp(c, 12), dp(c, 13), dp(c, 12))
         importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS

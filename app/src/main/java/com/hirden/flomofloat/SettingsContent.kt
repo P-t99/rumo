@@ -32,6 +32,12 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
     init {
         orientation = VERTICAL
         addAppearance()
+        val layoutCard = card("展开窗口布局")
+        Ui.add(layoutCard, Ui.text(context, "拖动顶部圆点移动，拖动右下角缩放。尺寸与位置自动保存在本机，笔记 / 设置及横竖屏分别记忆。输入法出现时临时避让，收起后恢复。", 12f, Ui.muted), 6)
+        Ui.add(layoutCard, Ui.button(context, "重置窗口布局") {
+            runCatching { store.resetPanelLayouts() }.onSuccess { toast("窗口大小和位置已重置，草稿、API 和标签保留") }
+                .onFailure { toast("重置失败，请重试") }
+        }, 10)
         val apiCard = card("连接 flomo")
         Ui.add(apiCard, Ui.text(context, "粘贴 flomo 设置 → API 中的完整地址。", 12f, Ui.muted), 6)
         val api = Ui.edit(context, "https://flomoapp.com/iwh/…").apply {

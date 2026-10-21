@@ -9,3 +9,11 @@
 `AppUpdates` 读取 HTTPS 版本信息，使用 Android DownloadManager 下载，校验哈希、包名、版本和签名，再交给系统安装器确认。
 
 FloatingX 3.0.0 的 core 与 system 模块放在 vendor，保留上游源码和许可，构建文件按应用简化。自动测试采用 Robolectric，系统服务和厂商后台策略仍需手机验证。
+
+# 可调整窗口布局
+
+`PanelLayout` 保存用户选择的 dp 尺寸和相对安全区域左上角的位置；`LocalStore` 按笔记 / 设置、横屏 / 竖屏分开存储。`PanelGeometry` 将偏好投影到当前屏幕可用范围，旧位置超出新屏幕时夹回可见区域。
+
+`PanelWindowController` 监听布局和 WindowInsets，结合屏幕级窗口指标与可见 display frame 判断普通底部输入法占用。输入法期间高度最多占可用区域的 80%，保留部分原页面；此时的自动缩小 / 移动不写入偏好，输入法关闭后重新投影原偏好。仅手动拖动结束时保存，拖动取消恢复。只移动窗口时保留用户原先高度，避免把键盘期间的临时高度持久化。
+
+顶部和右下角的 `PanelHandleView` 独占拖动事件流，`SwipeLayout` 对手柄不识别收起手势。FloatingX 继续处理窗口挂载与输入法焦点，上游源码未修改。系统浮动键盘可能不报告遮挡区域，用户可手动调整布局。
