@@ -18,4 +18,4 @@ FloatingX 3.0.0 的 core 与 system 模块放在 vendor，保留上游源码和�
 
 顶部和右下角的 `PanelHandleView` 独占拖动事件流，`SwipeLayout` 对手柄不识别收起手势。FloatingX 继续处理窗口挂载，上游源码未修改。系统浮动键盘可能不报告遮挡区域，用户可手动调整布局。
 
-`OverlayInputController` 管理展开窗口的输入焦点。默认 `NOT_FOCUSABLE + ALT_FOCUSABLE_IM`，不抢其他 APP 的输入，并位于其键盘下方。显式保留 `NOT_TOUCH_MODAL + WATCH_OUTSIDE_TOUCH`，编辑时窗外触摸仍交给底层 APP。触摸指定编辑框后移除前两个标志并请求键盘；窗外事件或失焦立即恢复被动状态。所有延迟键盘任务带代次检查且可取消，防止快速切换窗口后抢回焦点。仅在仍持有焦点且主动关闭自身输入时调用隐藏键盘，避免影响外部 APP 的输入法。
+`OverlayInputController` 管理展开窗口的输入焦点。被动时使用 `NOT_FOCUSABLE + ALT_FOCUSABLE_IM`，不抢其他 APP 的输入，并位于其键盘下方。显式保留 `NOT_TOUCH_MODAL + WATCH_OUTSIDE_TOUCH`，编辑时窗外触摸仍交给底层 APP。展开笔记后在忙碌状态更新完成时主动聚焦正文并请求键盘；设置页保持被动，触摸指定编辑框后进入编辑。两条路径统一移除前两个标志、立即请求编辑焦点并排队请求键盘；窗外事件或失焦立即恢复被动状态。初始请求与触摸请求使用同一可取消任务，不额外安排重复自动聚焦。所有延迟键盘任务带代次检查且可取消，防止快速切换窗口后抢回焦点。仅在仍持有焦点且主动关闭自身输入时调用隐藏键盘，避免影响外部 APP 的输入法。

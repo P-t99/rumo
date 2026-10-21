@@ -9,7 +9,7 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import com.petterp.floatingx.system.container.FxWindowContainer
 
-/** The overlay owns input only after a user touches one of its editors. */
+/** Input ownership starts on opening a note or touching an editor, and ends outside the panel. */
 class OverlayInputController(private val container: FxWindowContainer, ids: IntArray) {
     private val fields: List<View> = ids.map { container.contentView?.findViewById<View>(it) }.filterNotNull()
     private val imm = container.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -43,14 +43,24 @@ class OverlayInputController(private val container: FxWindowContainer, ids: IntA
         fields.forEach { field ->
             field.setOnTouchListener { view, event ->
                 if (!closed && event.actionMasked == MotionEvent.ACTION_DOWN && view.isEnabled) {
-                    editing = true; activeField = view
-                    setInputFocusable(true)
-                    scheduleKeyboard(view)
+                    beginEditing(view)
                 }
                 false
             }
         }
         container.onImeBack = { releaseInput(hideKeyboard = true) }
+    }
+
+    fun focusEditor(id: Int) {
+        fields.firstOrNull { it.id == id }?.let(::beginEditing)
+    }
+
+    private fun beginEditing(field: View) {
+        if (closed || !field.isEnabled) return
+        editing = true; activeField = field
+        setInputFocusable(true)
+        field.requestFocus()
+        scheduleKeyboard(field)
     }
 
     private fun scheduleKeyboard(field: View) {

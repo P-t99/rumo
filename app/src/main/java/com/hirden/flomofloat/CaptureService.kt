@@ -192,7 +192,7 @@ class CaptureService : Service() {
         Ui.add(body, chips, 4)
         count = Ui.text(this, "${draft.text.length} 字 · 草稿自动保存", 11f, Ui.muted)
         Ui.add(body, count!!, 9)
-        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else "点正文输入 · 空白处轻左滑或双击收起", 11f, Ui.muted)
+        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else "直接输入 · 空白处轻左滑或双击收起", 11f, Ui.muted)
         Ui.add(body, status!!, 5)
         val footer = Ui.row(this)
         footer.addView(Ui.button(this, "设置") { showSettings() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)))
@@ -211,6 +211,7 @@ class CaptureService : Service() {
         }
         input!!.addTextChangedListener(watcher); tags!!.addTextChangedListener(watcher)
         restoring = false; showPanel(shell); updateBusy(); refreshChips()
+        panelInput?.focusEditor(R.id.note_input)
     }
     private fun showSettings() {
         if (!saveDraft()) return

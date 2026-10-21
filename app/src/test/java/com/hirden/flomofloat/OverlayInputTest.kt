@@ -62,11 +62,16 @@ class OverlayInputTest {
         assertEquals(0, root.windowParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
         assertEquals(0, root.windowParams.flags and WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
     }
-    @Test fun openingAndMovingPanelNeverAutomaticallyClaimsInput() {
+    @Test fun openingFocusesNoteImmediatelyAndMovingDoesNotReclaimReleasedInput() {
         val root = root(); measure(root)
-        passive(root)
+        active(root)
+        assertTrue(root.findViewById<EditText>(R.id.note_input).hasFocus())
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+        active(root)
+        assertTrue(root.findViewById<EditText>(R.id.note_input).hasFocus())
         assertTrue(root.windowParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL != 0)
         assertTrue(root.windowParams.flags and WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH != 0)
+        touch(root, MotionEvent.ACTION_OUTSIDE)
         val handle = root.findViewById<View>(R.id.drag_handle)
         touch(handle, MotionEvent.ACTION_DOWN); touch(handle, MotionEvent.ACTION_UP)
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
@@ -135,10 +140,30 @@ class OverlayInputTest {
     @Test fun closingPanelCancelsOldRequestsBeforeReopening() {
         val old = root(); measure(old)
         val oldField = old.findViewById<EditText>(R.id.note_input)
-        touch(oldField, MotionEvent.ACTION_DOWN)
+        oldField.setText("未完草稿")
         call("collapse"); call("expand")
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
-        passive(root()); assertFalse(oldField.hasFocus())
-        assertFalse(root().findViewById<EditText>(R.id.note_input).hasFocus())
+        active(root()); assertFalse(oldField.hasFocus())
+        val newField = root().findViewById<EditText>(R.id.note_input)
+        assertTrue(newField.hasFocus())
+        assertEquals("未完草稿", newField.text.toString())
+        assertEquals(newField.length(), newField.selectionStart)
+    }
+    @Test fun openingThenImmediatelyTouchingOutsideCancelsInitialKeyboardRequest() {
+        val root = root(); measure(root)
+        active(root)
+        touch(root, MotionEvent.ACTION_OUTSIDE)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+        passive(root)
+        assertFalse(root.findViewById<EditText>(R.id.note_input).hasFocus())
+    }
+    @Test fun repeatedExpandDoesNotRefocusAnAlreadyOpenPanelAfterOutsideTouch() {
+        val root = root(); measure(root)
+        touch(root, MotionEvent.ACTION_OUTSIDE)
+        call("expand")
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+        assertSame(root, root())
+        passive(root)
+        assertFalse(root.findViewById<EditText>(R.id.note_input).hasFocus())
     }
 }
