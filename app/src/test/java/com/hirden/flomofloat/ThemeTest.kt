@@ -43,7 +43,7 @@ class ThemeTest {
     }
     private fun service(): CaptureService {
         serviceController = Robolectric.buildService(CaptureService::class.java).create()
-        return serviceController!!.get().also { call(it, "expand") }
+        return serviceController!!.get().also { call(it, "expand"); idle() }
     }
     private fun call(service: CaptureService, name: String) {
         CaptureService::class.java.getDeclaredMethod(name).apply { isAccessible = true }.invoke(service)
