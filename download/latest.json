@@ -1,8 +1,8 @@
 {
-  "versionCode": 6,
-  "versionName": "0.4.2",
-  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.2.apk",
-  "sha256": "8bb89d8ed300379cbbaa698c8f92ab9bf87d16252d9287226765f920a952a8a2",
-  "notes": "展开笔记自动聚焦正文并弹出键盘，有草稿时从末尾继续写；点击窗外释放焦点。新增拖动缩放、布局记忆与重置，上方紧凑默认布局减少键盘开合跳动。保留 API、草稿、标签及悬浮入口设置。",
-  "minSdk": 26
+  "versionCode": 7,
+  "versionName": "0.4.3",
+  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.3.apk",
+  "sha256": "74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793",
+  "minSdk": 26,
+  "notes": "新增浅色、深色、跟随系统三种主题，选择自动保存，主界面与悬浮窗同步切换。切换保留未保存内容、光标、窗口布局和输入状态。保留展开聚焦正文、窗外释放焦点、缩放记忆和一键重置。"
 }
