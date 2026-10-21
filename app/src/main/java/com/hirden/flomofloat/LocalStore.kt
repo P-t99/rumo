@@ -64,6 +64,10 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         require(value.transparency in 0..80)
         prefs.edit().putString("overlay_mode", value.mode.name).putInt("overlay_transparency", value.transparency).apply()
     }
+    fun themeMode() = ThemeMode.parse(prefs.getString(AppTheme.PREFERENCE, null))
+    fun saveThemeMode(value: ThemeMode) {
+        check(prefs.edit().putString(AppTheme.PREFERENCE, value.name).commit()) { "Local storage unavailable" }
+    }
     fun observeAppearance(listener: android.content.SharedPreferences.OnSharedPreferenceChangeListener) { prefs.registerOnSharedPreferenceChangeListener(listener) }
     fun removeAppearanceObserver(listener: android.content.SharedPreferences.OnSharedPreferenceChangeListener) { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     private fun panelKey(settings: Boolean, landscape: Boolean) = "panel_${if (settings) "settings" else "note"}_${if (landscape) "landscape" else "portrait"}_"

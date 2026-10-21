@@ -12,11 +12,12 @@ class PanelHandleView(context: Context, val resize: Boolean,
     private val begin: () -> Unit, private val change: (Float, Float) -> Unit,
     private val finish: (Boolean) -> Unit
 ) : View(context) {
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Ui.green; strokeWidth = Ui.dp(context, 2).toFloat(); strokeCap = Paint.Cap.ROUND }
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeWidth = Ui.dp(context, 2).toFloat(); strokeCap = Paint.Cap.ROUND }
     private var startX = 0f
     private var startY = 0f
     private var pointer = -1
     init {
+        Ui.bind(this, "paint") { paint.color = it[Ui.green]; invalidate() }
         isClickable = true; isFocusable = true
         contentDescription = if (resize) "拖动缩放窗口，方向键调整大小" else "拖动移动窗口，方向键调整位置"
     }

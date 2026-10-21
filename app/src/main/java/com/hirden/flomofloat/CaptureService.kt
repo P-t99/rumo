@@ -7,9 +7,9 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.ServiceInfo
 import android.content.res.Configuration
-import android.graphics.Color
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -48,6 +48,7 @@ class CaptureService : Service() {
     private val appearanceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "overlay_mode" || key == "overlay_transparency") applyAppearance()
         if (key == "layout_reset_revision") panelLayout?.reset()
+        if (key == AppTheme.PREFERENCE) refreshTheme()
     }
     private var editor: FxControl? = null
     private var panelLayout: PanelWindowController? = null
@@ -60,6 +61,7 @@ class CaptureService : Service() {
     private val chipButtons = mutableListOf<Pair<Button, String>>()
     private var restoring = false
     private var settingsPage = false
+    private var lastConfiguration: Configuration? = null
     private val handler = Handler(Looper.getMainLooper())
     private val updateTick = object : Runnable {
         override fun run() { AppUpdates.get(this@CaptureService).check(); handler.postDelayed(this, 6 * 60 * 60 * 1000L) }
@@ -70,11 +72,12 @@ class CaptureService : Service() {
             if (result.success && store.draft().text.isBlank()) {
                 Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
                 if (!settingsPage) collapse(persistDraft = false)
-            } else { status?.text = result.message; status?.setTextColor(if (result.success) Ui.green else Ui.red) }
-        } else { status?.text = "正在存入 flomo…"; status?.setTextColor(Ui.green) }
+            } else { status?.text = result.message; status?.let { Ui.textColor(it, if (result.success) Ui.green else Ui.red) } }
+        } else { status?.text = "正在存入 flomo…"; status?.let { Ui.textColor(it, Ui.green) } }
     }
     override fun onCreate() {
-        super.onCreate(); store = LocalStore(this); store.observeAppearance(appearanceListener); SendManager.observe(sendListener); handler.post(updateTick)
+        super.onCreate(); setTheme(AppTheme.style(this)); lastConfiguration = Configuration(resources.configuration)
+        store = LocalStore(this); store.observeAppearance(appearanceListener); SendManager.observe(sendListener); handler.post(updateTick)
     }
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,7 +139,7 @@ class CaptureService : Service() {
     private fun shell(isSettings: Boolean): SwipeLayout {
         return SwipeLayout(this) { collapse() }.apply {
             setPadding(Ui.dp(this@CaptureService, 12), Ui.dp(this@CaptureService, 6), Ui.dp(this@CaptureService, 12), Ui.dp(this@CaptureService, 6))
-            background = Ui.shape(this@CaptureService, if (isSettings) Ui.bg else Color.WHITE, 16, Ui.line)
+            Ui.background(this, if (isSettings) Ui.bg else Ui.surface, 16, Ui.line)
             elevation = Ui.dp(this@CaptureService, 12).toFloat()
             layoutParams = ViewGroup.LayoutParams(Ui.dp(this@CaptureService, 360), Ui.dp(this@CaptureService, 360))
         }
@@ -169,14 +172,14 @@ class CaptureService : Service() {
             id = R.id.note_input; contentDescription = "笔记正文"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             gravity = Gravity.TOP or Gravity.START; minLines = 2; maxLines = 8; textSize = 17f
-            background = null; setPadding(0, Ui.dp(this@CaptureService, 12), 0, Ui.dp(this@CaptureService, 8))
+            Ui.clearBackground(this); setPadding(0, Ui.dp(this@CaptureService, 12), 0, Ui.dp(this@CaptureService, 8))
             setText(draft.text); setSelection(length())
         }
         Ui.add(body, input!!, 4)
         tags = Ui.edit(this, "#标签").apply {
             id = R.id.note_tags; contentDescription = "笔记标签"
             inputType = InputType.TYPE_CLASS_TEXT; setSingleLine(true); setText(draft.tags); textSize = 13f
-            setTextColor(Ui.green); background = null; setPadding(0, Ui.dp(this@CaptureService, 8), 0, Ui.dp(this@CaptureService, 8))
+            Ui.textColor(this, Ui.green); Ui.clearBackground(this); setPadding(0, Ui.dp(this@CaptureService, 8), 0, Ui.dp(this@CaptureService, 8))
         }
         Ui.add(body, tags!!, 2)
         val chips = Ui.row(this); chipButtons.clear()
@@ -199,7 +202,7 @@ class CaptureService : Service() {
         footer.addView(Ui.button(this, "收起") { collapse() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)).apply { leftMargin = Ui.dp(this@CaptureService, 5) })
         sendButton = Ui.button(this, "存入 flomo", true) {
             if (!saveDraft()) return@button
-            SendManager.send(this)?.let { status?.text = it; status?.setTextColor(Ui.red) }
+            SendManager.send(this)?.let { status?.text = it; status?.let { Ui.textColor(it, Ui.red) } }
         }.apply { textSize = 14f; minWidth = 0; minimumWidth = 0 }
         footer.addView(sendButton, LinearLayout.LayoutParams(0, Ui.dp(this, 46), 1f).apply { leftMargin = Ui.dp(this@CaptureService, 6) })
         footer.addView(panelHandle(resize = true), LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 46)))
@@ -264,8 +267,8 @@ class CaptureService : Service() {
             val checked = value in selected
             button.isSelected = checked
             button.contentDescription = "$value，${if (checked) "已选中" else "未选中"}"
-            button.background = Ui.shape(this, if (checked) Ui.pale else Ui.bg, 8, if (checked) Ui.green else Ui.line)
-            button.setTextColor(if (checked) Ui.green else Ui.muted)
+            Ui.background(button, if (checked) Ui.pale else Ui.bg, 8, if (checked) Ui.green else Ui.line)
+            Ui.textColor(button, if (checked) Ui.green else Ui.muted)
         }
     }
     private fun saveDraft(): Boolean {
@@ -273,7 +276,7 @@ class CaptureService : Service() {
         if (SendManager.busy) return true
         return runCatching {
             store.saveDraft(Draft(field.text.toString(), tags?.text.toString())); count?.text = "${field.length()} 字 · 草稿已保存"; true
-        }.getOrElse { status?.text = "本地草稿保存失败，请暂时保留此窗口"; status?.setTextColor(Ui.red); false }
+        }.getOrElse { status?.text = "本地草稿保存失败，请暂时保留此窗口"; status?.let { Ui.textColor(it, Ui.red) }; false }
     }
     private fun updateBusy() {
         input?.isEnabled = !SendManager.busy; tags?.isEnabled = !SendManager.busy
@@ -293,11 +296,22 @@ class CaptureService : Service() {
     }
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        if (editor != null) {
+        val changes = lastConfiguration?.diff(newConfig) ?: 0
+        lastConfiguration = Configuration(newConfig)
+        refreshTheme()
+        val geometry = ActivityInfo.CONFIG_ORIENTATION or ActivityInfo.CONFIG_SCREEN_SIZE or
+            ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE or ActivityInfo.CONFIG_SCREEN_LAYOUT or
+            ActivityInfo.CONFIG_DENSITY or ActivityInfo.CONFIG_LAYOUT_DIRECTION or ActivityInfo.CONFIG_FONT_SCALE
+        if (editor != null && changes and geometry != 0) {
             val wasSettings = settingsPage
             if (!saveDraft()) return
             closePanel(); if (wasSettings) showSettings() else expand()
         }
+    }
+    private fun refreshTheme() {
+        setTheme(AppTheme.style(this))
+        editor?.contentView?.let(Ui::refresh)
+        bubble?.contentView?.let(Ui::refresh)
     }
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null); store.removeAppearanceObserver(appearanceListener); SendManager.remove(sendListener)
