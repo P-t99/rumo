@@ -1,0 +1,12 @@
+Rumo / 入墨
+Copyright (c) 2026 Hirden Tao (P-t99) and Rumo contributors
+https://github.com/P-t99/rumo
+
+Includes FloatingX 3.0.0, core and system modules.
+Copyright (c) 2021 Petterp
+Upstream: https://github.com/Petterpx/FloatingX
+License: MIT, retained in vendor/FloatingX-LICENSE
+Source attribution: vendor/UPSTREAM.md
+
+Rumo is an independent third-party input tool for flomo.
+flomo is maintained by its respective owners.

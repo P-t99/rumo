@@ -1,0 +1,82 @@
+# 入墨 Rumo
+
+**随时记录，回到 flomo。**
+
+我做了一个安卓悬浮速记工具，希望在使用其他 APP 时，也能随手写下几句话，直接存入自己的 flomo。记录入口留在屏幕边缘，整理和回顾继续在 flomo 完成。
+
+Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
+
+- 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
+- 当前版本：**0.3.0 测试版**，支持 Android 8.0 及以上
+- 许可：[MIT](LICENSE)
+- [下载入墨](https://rumo-flomo-updates.thd20x.chatgpt.site) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
+
+<img src="docs/images/features.png" alt="入墨功能示意图" width="560" />
+
+*功能插画，实际界面以安装后的应用为准。*
+
+## 功能
+
+| 功能 | 行为 |
+| --- | --- |
+| 悬浮速记 | 在其他 APP 上方记录文字与标签，一键存入 flomo |
+| 两种入口 | 贴边竖条 / 悬浮球，分别记住位置 |
+| 入口透明度 | 0–80%，即时保存；编辑窗口保持清晰 |
+| 快速收起 | 按钮、轻左滑、双击标题或空白；正文保留双击选词 |
+| 标签记忆 | 三个快捷标签可改，默认标签自动填入新笔记 |
+| 本地草稿 | 自动保存，发送失败保留；成功后清除对应草稿 |
+| 悬浮设置 | 在原窗口修改设置，返回继续编辑 |
+| 应用内更新 | 检查、下载和系统确认安装；复用任务和已校验文件 |
+
+当前支持文字和标签，暂未提供图片、录音、历史笔记查询或离线自动补发。
+
+## 安装使用
+
+1. 从[下载页](https://rumo-flomo-updates.thd20x.chatgpt.site)下载安装包。
+2. 从 [flomo API 页面](https://flomoapp.com/mine?source=incoming_webhook)复制个人 incoming webhook。官方 API 需要相应会员权限，详见[官方说明](https://help.flomoapp.com/advance/api.html)。
+3. 在入墨中粘贴地址并保存，点击“开始悬浮速记”，授权系统悬浮窗。
+4. 返回正在使用的 APP，点击竖条或悬浮球，写下内容并点击“存入 flomo”。
+
+已有维护者分发的测试版时，直接覆盖安装同一渠道的新版本可保留配置和草稿，不要先卸载。部分手机还需允许后台运行。
+
+## 数据与网络
+
+API 使用 Android Keystore 密钥进行 AES-GCM 加密后保存在应用私有空间。草稿、标签、窗口位置和显示偏好留在本机，卸载或清除数据会移除这些信息。
+
+手机通过 HTTPS 直接连接个人 flomo webhook，没有额外的笔记中转服务器。仅接受官方 flomo incoming webhook；HTTP 成功且响应业务代码为 `0` 后才确认保存。请求超时或连接中断时，先在 flomo 确认是否已收到，再决定重试，以免重复记录。
+
+更新页只提供安装包和版本信息，不接收笔记或 API。
+
+## 构建
+
+需要 JDK 17、Android SDK Platform 36、Build Tools 35.0.0。构建工具为 Gradle 8.13、AGP 8.13.2、Kotlin 2.2.21。
+
+```bash
+git clone https://github.com/P-t99/rumo.git
+cd rumo
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```
+
+可用 Android Studio 打开项目；也可设置本机 `ANDROID_HOME`，或在不提交的 `local.properties` 中填写 `sdk.dir`。
+
+调试包位于 `app/build/outputs/apk/debug/app-debug.apk`。源码使用开发者本机默认调试签名，**与下载页维护者签名不同，不能覆盖安装后者**。维护者私钥不随源码分发。发布签名方式见 [UPDATE_CHANNEL.md](UPDATE_CHANNEL.md)。
+
+## 实现与验证
+
+- `app/`：Kotlin / Android View 实现编辑、设置、草稿、发送与更新。
+- `vendor/floatingx-core/`、`vendor/floatingx-system/`：FloatingX 悬浮窗模块。
+- `CaptureService`：前台服务和窗口；`LocalStore`：凭据、草稿与偏好。
+- `FlomoClient`、`NoteProtocol`：请求与结果；`SwipeLayout`：手势。
+- `SettingsContent`：共用设置；`AppUpdates`：下载、校验和安装。
+
+我通过与 AI 协作完成调研、实现和构建，再根据实机试用反馈修改交互。0.3.0 原始构建有 32 项自动化测试通过。Robolectric 测试不能代替不同手机的悬浮权限、后台策略、Keystore 和系统安装器验证。参见 [构建记录](BUILD_REPORT.md)、[架构说明](docs/ARCHITECTURE.md)。
+
+欢迎反馈手机型号、系统版本和复现步骤，截图请隐藏 API 与私人笔记。参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 来源与致谢
+
+入墨采用 [Petterpx/FloatingX](https://github.com/Petterpx/FloatingX) **3.0.0** 的 core 和 system 模块。上游主源码保留，Gradle 构建文件按本应用简化。[来源记录](vendor/UPSTREAM.md) · [上游 MIT 许可](vendor/FloatingX-LICENSE)。
+
+笔记写入使用 [flomo 官方记录 API](https://help.flomoapp.com/advance/api.html)。入墨是独立的第三方工具，与 flomo 官方分别维护。
+
+本项目按 [MIT License](LICENSE) 发布，第三方组件保留原作者声明，详见 [NOTICE](NOTICE)。

@@ -1,0 +1,8 @@
+<resources>
+    <item name="note_input" type="id" /><item name="note_tags" type="id" />
+    <item name="drag_handle" type="id" /><item name="api_input" type="id" />
+    <item name="preset_one" type="id" /><item name="preset_two" type="id" /><item name="preset_three" type="id" />
+    <item name="default_tags" type="id" /><item name="update_feed" type="id" />
+    <item name="mode_edge" type="id" /><item name="mode_ball" type="id" />
+    <item name="floating_transparency" type="id" />
+</resources>
