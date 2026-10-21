@@ -9,7 +9,7 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
 - 当前版本：**0.3.0 测试版**，支持 Android 8.0 及以上
 - 许可：[MIT](LICENSE)
-- [下载入墨](https://rumo-flomo-updates.thd20x.chatgpt.site) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
+- [下载入墨](https://rumo.hirkond.online) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
 
 <img src="docs/images/features.png" alt="入墨功能示意图" width="560" />
 
@@ -32,12 +32,14 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 
 ## 安装使用
 
-1. 从[下载页](https://rumo-flomo-updates.thd20x.chatgpt.site)下载安装包。
+1. 从[下载页](https://rumo.hirkond.online)下载安装包。
 2. 从 [flomo API 页面](https://flomoapp.com/mine?source=incoming_webhook)复制个人 incoming webhook。官方 API 需要相应会员权限，详见[官方说明](https://help.flomoapp.com/advance/api.html)。
 3. 在入墨中粘贴地址并保存，点击“开始悬浮速记”，授权系统悬浮窗。
 4. 返回正在使用的 APP，点击竖条或悬浮球，写下内容并点击“存入 flomo”。
 
 已有维护者分发的测试版时，直接覆盖安装同一渠道的新版本可保留配置和草稿，不要先卸载。部分手机还需允许后台运行。
+
+已有 0.2.0 / 0.3.0 用户，请在“设置 → 版本与更新”中将更新源保存为 `https://rumo.hirkond.online/latest.json`。本次域名迁移保留原 0.3.0 安装包与签名，不需要重新安装。
 
 ## 数据与网络
 

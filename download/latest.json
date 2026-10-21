@@ -1,0 +1,8 @@
+{
+  "versionCode": 3,
+  "versionName": "0.3.0",
+  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.3.0.apk",
+  "sha256": "b17233ec3c6bd944895b88caf77131f8af5d2cb7a9137e3f47a1b37e67e43a29",
+  "notes": "新增贴边竖条 / 悬浮球切换、0–80% 透明度调节；更短左滑和双击标题 / 空白区域收起。保留 API、草稿与标签。",
+  "minSdk": 26
+}
