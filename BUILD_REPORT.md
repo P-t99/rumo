@@ -1,3 +1,21 @@
+# 0.4.0 可调整窗口验证
+
+日期：2026-10-21。包名 `com.hirden.flomofloat`，versionCode 4。
+
+- `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug` 成功。
+- 9 个测试套件、42 项测试通过，0 失败 / 错误 / 跳过。
+- Lint 0 错误、13 条非阻断警告。
+- 功能提交 `4743034` 的 [GitHub CI](https://github.com/P-t99/rumo/actions/runs/39611849102) 已通过测试、Lint 与 APK 编译。
+- 测试覆盖尺寸与位置持久化、笔记 / 设置及横竖屏隔离、重置保留 API / 草稿 / 标签 / 入口外观、真实缩放手柄与收起手势隔离、取消拖动、越界回收、模拟输入法避让及恢复、最小窗口底部操作与滚动正文布局。
+- APK：`Rumo-Flomo-0.4.0-test.apk`，2,246,655 字节，SHA-256 `9cfd49d826e5258b3cdadaff4a3681168c22ea0471425ec5d1ed8bb89cf4d05f`。
+- 测试 APK 由 debug 构建使用原分发测试证书重新签名；签名验证通过，与原 0.3.0 证书一致：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`。可以覆盖同签名旧版，保留应用数据；请勿先卸载。签名私钥不进入公开仓库。
+
+自动化环境为 Robolectric API 34，另有纯几何单元测试；键盘可用区由测试模拟，未进行真实手机 / 输入法实测。浮动或分离式输入法可能不提供遮挡区域，需手动移动 / 缩放。
+
+本次提供独立测试 APK 和功能分支，不修改线上下载页及更新接口；待手机验证后再分发。
+
+---
+
 # 公开源码构建验证
 
 验证日期：2026-10-21。项目：入墨 Rumo；Android 包名 com.hirden.flomofloat，版本 0.3.0，versionCode 3。
