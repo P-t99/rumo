@@ -11,7 +11,7 @@ import com.petterp.floatingx.system.container.FxWindowContainer
 
 /** The overlay owns input only after a user touches one of its editors. */
 class OverlayInputController(private val container: FxWindowContainer, ids: IntArray) {
-    private val fields = ids.mapNotNull { container.contentView?.findViewById<View>(it) }
+    private val fields: List<View> = ids.map { container.contentView?.findViewById<View>(it) }.filterNotNull()
     private val imm = container.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     private var activeField: View? = null
     private var pending: Runnable? = null
