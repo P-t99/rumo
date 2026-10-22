@@ -1,8 +1,8 @@
 {
-  "versionCode": 7,
-  "versionName": "0.4.3",
-  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.3.apk",
-  "sha256": "74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793",
+  "versionCode": 8,
+  "versionName": "0.4.4",
+  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.4.apk",
+  "sha256": "25115b95975bb0d781f71c97895badd8f9907058fb6c6ae53fd1bd3d77def213",
   "minSdk": 26,
-  "notes": "新增浅色、深色、跟随系统三种主题，选择自动保存，主界面与悬浮窗同步切换。切换保留未保存内容、光标、窗口布局和输入状态。保留展开聚焦正文、窗外释放焦点、缩放记忆和一键重置。"
+  "notes": "修复悬浮框长按选词和文字编辑，新增全选、复制、剪切、粘贴工具栏，正文、标签和悬浮设置均可使用。选区操作保留草稿、输入焦点和窗口布局；遮挡 API 禁止复制和剪切。保留深浅主题与系统跟随，默认更新源恢复原站。"
 }

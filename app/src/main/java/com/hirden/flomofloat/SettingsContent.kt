@@ -45,8 +45,9 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         val api = Ui.edit(context, "https://flomoapp.com/iwh/…").apply {
             id = R.id.api_input; contentDescription = "flomo API 地址"; isSaveEnabled = false
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setSingleLine(true)
             transformationMethod = PasswordTransformationMethod.getInstance()
-            setSingleLine(true); setText(store.api())
+            setText(store.api())
         }
         Ui.add(apiCard, api, 12)
         val apiMessage = Ui.text(context, when { store.apiReadFailed -> "读取失败，请重新保存 API"; api.text.isNotBlank() -> "已加密保存在本机"; else -> "尚未填写 API" }, 12f, Ui.muted)

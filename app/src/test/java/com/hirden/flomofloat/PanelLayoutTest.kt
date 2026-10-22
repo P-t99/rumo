@@ -148,7 +148,7 @@ class PanelLayoutTest {
             val send = findButton(view, "存入 flomo")!!
             assertTrue(send.width >= Ui.dp(activity, 75))
             assertTrue(send.right <= footer.width)
-            val scroll = view.getChildAt(1) as android.widget.ScrollView
+            val scroll = (0 until view.childCount).map { view.getChildAt(it) }.filterIsInstance<android.widget.ScrollView>().single()
             assertTrue(scroll.height > 0)
             assertTrue(scroll.getChildAt(0).height > scroll.height)
         } finally { serviceController.destroy() }

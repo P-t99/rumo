@@ -1,6 +1,7 @@
 package com.hirden.flomofloat
 
 import android.content.Context
+import android.view.ActionMode
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -11,6 +12,14 @@ import kotlin.math.abs
 
 /** Short left swipe or double tap on free space; input controls keep their own gestures. */
 class SwipeLayout(context: Context, private val collapse: () -> Unit) : LinearLayout(context) {
+    internal var textActions: OverlayTextActions? = null
+    override fun startActionModeForChild(originalView: View, callback: ActionMode.Callback, type: Int): ActionMode? {
+        val actions = textActions
+        return if (actions != null && originalView is EditText) actions.start(originalView, callback, type)
+        else super.startActionModeForChild(originalView, callback, type)
+    }
+    override fun startActionModeForChild(originalView: View, callback: ActionMode.Callback): ActionMode? =
+        startActionModeForChild(originalView, callback, ActionMode.TYPE_PRIMARY)
     private var startX = 0f
     private var startY = 0f
     private var eligible = false

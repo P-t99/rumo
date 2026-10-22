@@ -1,3 +1,20 @@
+# 0.4.4 悬浮文字编辑验证
+
+日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 8。
+
+- `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-build-cache` 成功。
+- 12 个套件、69 项测试全部通过，0 失败 / 错误 / 跳过；Lint 0 错误、15 条非阻断警告。
+- 新增 8 项文字编辑回归，包含框架原生长按路径与选区、ActionMode 创建及清理、全选 / 复制 / 剪切、部分选区替换、多行和 emoji、空笔记粘贴、标签与悬浮设置、遮挡 API 保护、草稿 / 窗口保留及窗外释放。
+- 原主题、焦点交接、缩放、布局记忆、默认布局稳定性和更新文件复用测试继续通过。
+- API 单行输入先配置，再设置遮挡变换，避免单行属性覆盖隐藏显示。
+- APK：`Rumo-Flomo-0.4.4-test.apk`，2,263,039 字节，SHA-256 `25115b95975bb0d781f71c97895badd8f9907058fb6c6ae53fd1bd3d77def213`。
+- 原分发证书签名与验证通过：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`。可覆盖安装保留数据，不要先卸载。
+- APK 实际 DEX 包含 `OverlayTextActions` 与原站默认更新源，包名 / code 8 / 版本 0.4.4 与发布接口一致。
+
+自动化使用 Robolectric API 34，长按测试发送实际按下 / 抬起事件并关闭测试环境的智能选词分类器；这验证框架编辑生命周期，不代表已验证厂商选区手柄或真实微信。手机验证见 [TESTING.md](TESTING.md)。发布记录见 [PUBLISH_0.4.4.md](docs/PUBLISH_0.4.4.md)。
+
+---
+
 # 0.4.3 主题与编辑状态保留验证
 
 日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 7。
