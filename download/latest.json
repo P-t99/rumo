@@ -1,7 +1,7 @@
 {
   "versionCode": 7,
   "versionName": "0.4.3",
-  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.3.apk",
+  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.3.apk",
   "sha256": "74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793",
   "minSdk": 26,
   "notes": "新增浅色、深色、跟随系统三种主题，选择自动保存，主界面与悬浮窗同步切换。切换保留未保存内容、光标、窗口布局和输入状态。保留展开聚焦正文、窗外释放焦点、缩放记忆和一键重置。"

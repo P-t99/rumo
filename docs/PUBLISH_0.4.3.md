@@ -1,35 +1,34 @@
-# 发布 0.4.3 到应用内更新通道
+# 0.4.3 应用内更新发布记录
 
-0.4.3 已通过 61 项自动化测试、Lint 和 APK 构建，并使用原分发测试证书签名。当前会话没有 `rumo.hirkond.online` 的服务器发布连接，以下文件已准备好；**尚未上线，提交 GitHub 不会自动更新网站**。
+2026-10-22，按维护者要求复用原 Sites 更新站，0.4.3 已上线。
 
-## 交给本地 Codex 的任务
+- 下载页：https://rumo-flomo-updates.thd20x.chatgpt.site/
+- 版本接口：https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json
+- 安装包：https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.3.apk
+- versionCode `7`，minSdk `26`，包名 `com.hirden.flomofloat`。
+- APK：2,258,943 字节，SHA-256 `74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793`。
+- 签名证书 SHA-256：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`，与原测试渠道一致。
 
-读取本机入墨仓库中已有的服务器部署说明，使用现有发布连接，将 `Rumo-0.4.3-app-update.zip` 内的 `download/` 发布到 `https://rumo.hirkond.online`。先核对目标域名的实际站点目录，备份旧版本接口和下载页；先上传并验证 APK，最后原子替换 `latest.json`。完成后从公网重新下载并核对哈希，再报告线上版本。不要更改其他域名服务，不要上传维护者私钥、个人 API 或草稿。
+## 发布和验证
 
-## 文件与校验
+复用项目 `appgprj_6ad83e497adc81919dc33fcaa561fc82`，保持公开访问。先发布 APK，匿名下载并用 SHA-256、文件大小与 apksigner 验证；然后将接口和下载页切换为 0.4.3。原 0.3.0 APK 保留。
 
-- `download/releases/Rumo-Flomo-0.4.3.apk`：原签名安装包，2,258,943 字节。
-- `download/latest.json`：versionCode `7`，versionName `0.4.3`，minSdk `26`。
-- `download/index.html`：新版下载页。
-- APK SHA-256：`74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793`。
-- 签名证书 SHA-256：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`。
+| Sites 版本 | 站点源提交 | 内容 |
+| --- | --- | --- |
+| 1 | `64ad42b268878b6ef2609a908e3e60743465e3c2` | 原 0.3.0 |
+| 2 | `8064b0a520e602ad4665976e6ca85b0ff5198b7d` | 增加 0.4.3 APK，接口仍为 0.3.0 |
+| 3 | `6e911a0ce6ff0b03cf4b16c9e3d2bf7e35785b91` | 接口与下载页切换为 0.4.3 |
 
-发布包内运行 `python3 verify_release.py` 可先检查本地文件；部署后运行 `python3 verify_release.py --online` 校验公开版本接口和实际下载字节。
+最终部署 `appgdep_6ad953041cb08191b16eb8e551a31242` 成功。公开无查询参数接口返回 0.4.3 / code 7；使用 Android HttpURLConnection 和 DownloadManager 的 User-Agent 分别请求接口与 APK，均为 HTTP 200，匿名下载的实际 APK 大小及哈希一致。下载页的安装包链接、更新源和 SHA-256 与接口相符。接口响应为 `application/json`、`Cache-Control: public, max-age=0, must-revalidate`；APK 返回 `application/octet-stream`，应用下载器按 APK MIME 处理。
 
-## 发布顺序
+未进行真实手机安装、微信或厂商输入法验证。61 项自动化测试和 Lint 结果见 [BUILD_REPORT.md](../BUILD_REPORT.md)。
 
-1. 使用本机已有连接，读取目标域名对应的 nginx / 静态站点配置，确认实际目录；不要猜目录或使用其他项目的凭据。
-2. 将原 `latest.json` 和 `index.html` 备份到该服务器的独立备份目录，记录备份路径与恢复命令，保留全部历史 APK。
-3. 将新 APK 上传到临时文件，校验 SHA-256 后原子改名为 `/releases/Rumo-Flomo-0.4.3.apk`。若同名版本文件已经存在且哈希不同，停止并核对，勿覆盖。
-4. 通过公开 HTTPS 下载该版本 APK，核对实际下载哈希与上方一致。确认成功后才进入下一步。
-5. 上传新页面和接口为临时文件，先替换页面，再原子替换 `latest.json`。保持更新接口不缓存；如存在 CDN 缓存，清除该接口缓存。只更新本域名的相关文件。
-6. 运行发布包的线上校验脚本；同时确认不带查询参数的 `https://rumo.hirkond.online/latest.json` 返回 code `7`、版本 `0.4.3`，APK 地址可匿名下载。
-7. 在旧版 APP 内检查更新、下载、确认系统安装，核对版本与 API / 草稿 / 标签保留；取消安装再进入应复用下载文件。真实微信与厂商输入法仍需手机验证。
+## 已安装 APP 的更新源
+
+如 APP 内仍保存自有域名，请在“设置 → 版本与更新”中保存 `https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json` 一次，再检查更新。原站地址未变的用户直接检查即可。低于 code 7 的版本会提示更新；已安装 0.4.3 时显示已是最新版本。覆盖安装保留 API、草稿、标签和已保存的更新源，不要先卸载。
+
+0.4.3 内置默认值仍是构建时的 `https://rumo.hirkond.online/latest.json`；本次只更新分发通道，未重打包或变更同名 APK。已保存的更新源覆盖该默认值。此前准备的自有域名 ZIP 不等于当前站点快照，请勿直接用于回填此站。
 
 ## 回退
 
-优先原子恢复备份的 `latest.json`，再恢复旧下载页，保留新旧 APK 以避免中断已有下载。恢复后核对公开接口与旧版本安装包地址可用。回退更新接口不会自动降级已安装的 APP。
-
-原始 0.3.0 安装包若仍使用旧站更新源，需要先在 APP 中保存 `https://rumo.hirkond.online/latest.json`；0.4.1 及以上源码构建已默认使用此通道。
-
-新版主题：默认跟随系统；主界面和悬浮设置均可选择浅色 / 深色 / 跟随系统。切换保留未保存内容、光标、窗口布局和输入交接状态。上线后请补充真实设备主题、系统栏及输入法验证。
+需要回退更新接口时，可在原 Sites 项目重新部署已保存的版本 2：它恢复原 0.3.0 页面和接口，同时保留 0.4.3 APK，避免中断已有下载。回退接口不会降级手机上已安装的 APP。后续发布继续复用同一项目、站点源仓库与公开访问配置，不要创建重复站点。

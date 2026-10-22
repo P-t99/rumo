@@ -10,7 +10,7 @@
 - APK：`Rumo-Flomo-0.4.3-test.apk`，2,258,943 字节，SHA-256 `74f86f1fc3deb425d2c1561c5e7269a50cb285c6b6950ff390ace028be2e9793`。
 - 使用原分发测试证书重新签名，验证通过：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`。可以覆盖旧测试版并保留应用数据，勿先卸载。维护者私钥不进入仓库。
 
-自动化基于 Robolectric API 34、模拟窗口区域及外部 InputConnection，真实微信和厂商输入法仍需手机验证。默认布局及焦点交接规则保持；主题切换无需重置。更新接口、下载页及版本化 APK 已准备，本地发布文件校验通过；现有发布服务器连接未接入，应用内更新尚未上线。
+自动化基于 Robolectric API 34、模拟窗口区域及外部 InputConnection，真实微信和厂商输入法仍需手机验证。默认布局及焦点交接规则保持；主题切换无需重置。2026-10-22 已通过原 Sites 更新站发布 0.4.3：先发布并匿名下载验证 APK，再切换接口和下载页。无查询参数的公开接口返回 versionCode 7；模拟 Android HttpURLConnection / DownloadManager 的请求与下载页均返回 HTTP 200，实际 APK 大小、SHA-256 和签名与测试包一致。缓存响应为 `public, max-age=0, must-revalidate`。实际手机内检查、安装和数据保留仍待实测。当前更新地址见 [UPDATE_CHANNEL.md](UPDATE_CHANNEL.md)。
 
 ---
 
