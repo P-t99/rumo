@@ -5,8 +5,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Rect
 import android.os.Looper
+import android.os.SystemClock
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.textclassifier.TextClassifier
@@ -27,10 +30,12 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ServiceController
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xhdpi")
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ContextualTextActionsTest {
     private lateinit var controller: ServiceController<CaptureService>
     private lateinit var service: CaptureService
@@ -51,6 +56,7 @@ class ContextualTextActionsTest {
     private fun frame() = listOf(root.windowParams.x, root.windowParams.y, root.windowParams.width, root.windowParams.height)
     private fun longPress(text: String) {
         field.setText(text); field.setTextClassifier(TextClassifier.NO_OP); layout()
+
         val x = field.totalPaddingLeft + field.layout.getPrimaryHorizontal(minOf(2, field.length()))
         val y = field.totalPaddingTop + field.layout.getLineBottom(0) / 2f
         MotionEvent.obtain(0, 20, MotionEvent.ACTION_DOWN, x, y, 0).let { field.dispatchTouchEvent(it); it.recycle() }
@@ -59,6 +65,38 @@ class ContextualTextActionsTest {
         idle(); layout()
     }
     private fun click(id: Int) { root.findViewById<Button>(id).performClick(); idle(); layout() }
+    private fun fingerLongPress(text: String, blank: Boolean = false, offset: Int = 2,
+        move: Float = 0f, cancelled: Boolean = false, duration: Long = ViewConfiguration.getLongPressTimeout().toLong() + 120,
+        disableNativeLongClick: Boolean = false, centerGrapheme: Boolean = false) {
+        // Robolectric has no real smart-selection service. Keep native editor
+        // handling enabled, without accepting its stub classifier's 0..0 result.
+        field.setText(text); field.setTextClassifier(TextClassifier.NO_OP); layout()
+        if (disableNativeLongClick) field.isLongClickable = false
+
+        val f = IntArray(2); field.getLocationOnScreen(f)
+        val p = IntArray(2); root.getLocationOnScreen(p)
+        val at = minOf(offset, field.length())
+        val horizontal = field.layout.getPrimaryHorizontal(at)
+        val next = if (centerGrapheme) android.icu.text.BreakIterator.getCharacterInstance().apply { setText(text) }.following(at) else at
+        val x = f[0] - p[0] + field.totalPaddingLeft + if (blank) field.width * .8f
+            else if (centerGrapheme) (horizontal + field.layout.getPrimaryHorizontal(next)) / 2 else horizontal
+        val y = f[1] - p[1] + field.totalPaddingTop + field.layout.getLineBottom(0) / 2f
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ViewConfiguration.getDoubleTapTimeout().toLong() + 50))
+        val down = SystemClock.uptimeMillis()
+        fun event(action: Int, dy: Float = 0f) {
+            MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, y + dy, 0).let {
+                it.source = InputDevice.SOURCE_TOUCHSCREEN
+                assertTrue(root.dispatchTouchEvent(it)); it.recycle()
+            }
+        }
+        event(MotionEvent.ACTION_DOWN)
+        if (move != 0f) event(MotionEvent.ACTION_MOVE, move)
+        if (cancelled) event(MotionEvent.ACTION_CANCEL)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(duration))
+        if (!cancelled) event(MotionEvent.ACTION_UP, move)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(600))
+        layout(); root.viewTreeObserver.dispatchOnPreDraw()
+    }
     private fun active() {
         assertTrue(field.hasFocus())
         assertEquals(0, root.windowParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
@@ -84,6 +122,76 @@ class ContextualTextActionsTest {
         val shell = field.parent.parent.parent as SwipeLayout
         assertEquals(3, shell.childCount)
         active()
+    }
+    @Test fun fingerHoldThroughTheWholeWindowSelectsAndShowsCopy() {
+        fingerLongPress("hello world")
+        assertTrue("Real finger hold must select text", field.hasSelection())
+        assertEquals(View.VISIBLE, toolbar.visibility)
+        assertEquals(View.VISIBLE, root.findViewById<View>(R.id.text_copy).visibility)
+        active()
+    }
+    @Test fun fingerHoldInAnEmptyNoteShowsPaste() {
+        clipboard.setPrimaryClip(ClipData.newPlainText("external", "手机长按粘贴"))
+        fingerLongPress("", blank = true)
+        assertEquals(View.VISIBLE, toolbar.visibility)
+        click(R.id.text_paste)
+        assertEquals("手机长按粘贴", field.text.toString()); active()
+    }
+    @Test fun fingerHoldStillSelectsAndShowsActionsWhenTheOemConsumesNativeLongClick() {
+        // Some vendor editors consume the gesture before an ActionMode reaches
+        // the overlay host. Exercise the window event stream, not performLongClick().
+        field.setOnLongClickListener { true }
+        fingerLongPress("hello world")
+        assertTrue("An omitted native selection must have a word selection fallback", field.hasSelection())
+        assertEquals("hello", field.text.subSequence(field.selectionStart, field.selectionEnd).toString())
+        assertEquals(View.VISIBLE, toolbar.visibility)
+        click(R.id.text_copy)
+        assertEquals("hello", clipboard.primaryClip!!.getItemAt(0).text.toString()); active()
+    }
+    @Test fun fingerHoldStillOffersPasteWhenTheOemConsumesNativeLongClick() {
+        field.setOnLongClickListener { true }
+        clipboard.setPrimaryClip(ClipData.newPlainText("external", "独立长按通路"))
+        fingerLongPress("", blank = true)
+        assertEquals(View.VISIBLE, toolbar.visibility)
+        click(R.id.text_paste)
+        assertEquals("独立长按通路", field.text.toString()); active()
+    }
+    @Test fun fingerHoldDoesNotDependOnAnyNativeLongClickCallback() {
+        field.setOnLongClickListener(null)
+        fingerLongPress("hello world", disableNativeLongClick = true)
+        assertTrue(field.hasSelection()); assertEquals(View.VISIBLE, toolbar.visibility)
+        click(R.id.text_copy)
+        assertEquals("hello", clipboard.primaryClip!!.getItemAt(0).text.toString()); active()
+    }
+    @Test fun normalTapDoesNotOpenTheFallbackMenu() {
+        field.setOnLongClickListener { true }
+        field.customInsertionActionModeCallback = object : android.view.ActionMode.Callback {
+            override fun onCreateActionMode(mode: android.view.ActionMode, menu: android.view.Menu) = false
+            override fun onPrepareActionMode(mode: android.view.ActionMode, menu: android.view.Menu) = false
+            override fun onActionItemClicked(mode: android.view.ActionMode, item: android.view.MenuItem) = false
+            override fun onDestroyActionMode(mode: android.view.ActionMode) {}
+        }
+        fingerLongPress("hello world", duration = 30)
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+    @Test fun scrollingDoesNotOpenTheFallbackMenu() {
+        field.setOnLongClickListener { true }
+        fingerLongPress("hello world", move = ViewConfiguration.get(service).scaledTouchSlop * 3f)
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+    @Test fun cancelledHoldDoesNotOpenTheFallbackMenu() {
+        field.setOnLongClickListener { true }
+        fingerLongPress("hello world", cancelled = true)
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+    @Test fun fallbackSelectsChineseAndKeepsEmojiSequencesIntact() {
+        field.setOnLongClickListener { true }
+        fingerLongPress("记录灵感", offset = 1)
+        assertTrue(field.hasSelection()); assertEquals(View.VISIBLE, toolbar.visibility)
+        fingerLongPress("a 👨‍👩‍👧‍👦 z", offset = 2, centerGrapheme = true)
+        assertTrue(field.hasSelection())
+        click(R.id.text_copy)
+        assertEquals("👨‍👩‍👧‍👦", clipboard.primaryClip!!.getItemAt(0).text.toString())
     }
     @Test fun longPressShowsNearbyActionsAndCopyPreservesDraftFocusAndFrame() {
         val before = frame(); longPress("hello world")

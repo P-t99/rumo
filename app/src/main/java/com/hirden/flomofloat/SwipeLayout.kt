@@ -37,7 +37,10 @@ class SwipeLayout(context: Context, private val collapse: () -> Unit) : LinearLa
     })
     init { orientation = VERTICAL }
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        textActions?.onPanelTouch(event)
+        if (textActions?.onPanelTouch(event) == true) {
+            val cancel = MotionEvent.obtain(event).apply { action = MotionEvent.ACTION_CANCEL }
+            return try { super.dispatchTouchEvent(cancel) } finally { cancel.recycle() }
+        }
         if (event.actionMasked == MotionEvent.ACTION_DOWN) {
             doubleTapEligible = !controlAt(this, event.x, event.y, includeButtons = true)
             doubleTapInProgress = false

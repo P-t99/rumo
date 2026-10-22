@@ -2,6 +2,8 @@ package com.hirden.flomofloat
 
 import android.content.ClipboardManager
 import android.graphics.Rect
+import android.icu.text.BreakIterator
+import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.PasswordTransformationMethod
@@ -18,6 +20,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.PopupMenu
+import kotlin.math.abs
 
 /** Host native text selection in a WindowManager overlay without a DecorView.
  * The contextual menu is a child of the same window: it neither takes focus nor
@@ -35,6 +38,12 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
     private val editors = mutableListOf<EditText>()
     private val watchers = linkedMapOf<EditText, TextWatcher>()
     private val pendingEdits = linkedMapOf<EditText, Runnable>()
+    private data class Hold(val field: EditText, val x: Float, val y: Float, val rawX: Float,
+        val rawY: Float, val started: Long, val generation: Int,
+        var nativeHandled: Boolean = false, var fallbackUsed: Boolean = false)
+    private var hold: Hold? = null
+    private var pendingHold: Runnable? = null
+    private val touchSlop = ViewConfiguration.get(shell.context).scaledTouchSlop
     private val buttons = linkedMapOf<Int, Button>()
     private val toolbar = Ui.row(shell.context).apply {
         id = R.id.text_edit_toolbar
@@ -66,6 +75,9 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
         fun bind(view: View) {
             if (view is EditText) {
                 editors.add(view)
+                if (view is OverlayEditText) view.onLongPressResult = { handled ->
+                    hold?.takeIf { it.field === view }?.nativeHandled = handled
+                }
                 val watcher = object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -91,7 +103,7 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
                         // overlay/OEM paths select text without creating any ActionMode.
                         if (!closed && generation == gestureGeneration && view.isEnabled && view.hasFocus() &&
                             mode?.field !== view && (view.length() > 0 || clipboard.hasPrimaryClip())) {
-                            view.startActionMode(EditorActions(view), ActionMode.TYPE_FLOATING)
+                            start(view, EditorActions(view), ActionMode.TYPE_FLOATING)
                         }
                     }
                     longPressFallbacks[view] = fallback
@@ -173,12 +185,9 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
         val margin = Ui.dp(shell.context, 6)
         if (bounds.width() > margin * 2 && bounds.height() > margin * 2) bounds.inset(margin, margin)
         val anchor = Rect()
-        if (current.callback is ActionMode.Callback2) {
-            current.callback.onGetContentRect(current, current.field, anchor)
-        } else {
-            current.field.getDrawingRect(anchor)
-            anchor.offset(-current.field.scrollX, -current.field.scrollY)
-        }
+        // OEM ActionMode callbacks can report coordinates in another window.
+        // Use the public text layout in this window for both native and fallback modes.
+        EditorActions(current.field).onGetContentRect(current, current.field, anchor)
         // An insertion caret can have zero width in the framework callback.
         anchor.right = maxOf(anchor.left + 1, anchor.right)
         anchor.bottom = maxOf(anchor.top + 1, anchor.bottom)
@@ -213,7 +222,10 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
 
     fun start(view: View, callback: ActionMode.Callback, type: Int): ActionMode? {
         if (closed || view !is EditText || !view.isEnabled) return null
+        val previous = mode
+        val start = view.selectionStart; val end = view.selectionEnd
         mode?.finish()
+        if (previous?.field === view && start >= 0 && end >= 0) view.setSelection(start, end)
         focus(view)
         val next = TextMode(view, callback, type)
         if (!callback.onCreateActionMode(next, next.menu)) return null
@@ -224,18 +236,106 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
     /** Called before hiding the IME so Back first dismisses a selection menu. */
     fun dismissSelection(): Boolean {
         val current = mode ?: return false
+        gestureGeneration++; cancelHold()
         current.finish()
         return true
     }
 
-    fun onPanelTouch(event: MotionEvent) {
-        if (event.actionMasked != MotionEvent.ACTION_DOWN) return
-        gestureGeneration++
-        if (pinned) return
-        val current = mode ?: return
-        val rect = visibleOnScreen(current.field) ?: return
-        val location = IntArray(2); shell.getLocationOnScreen(location)
-        if (current.callback is EditorActions || !rect.contains((event.x + location[0]).toInt(), (event.y + location[1]).toInt())) dismissSelection()
+    /** True means native UP would turn our long press into a tap; dispatch CANCEL instead. */
+    fun onPanelTouch(event: MotionEvent): Boolean {
+        var cancelNativeUp = false
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                cancelHold(); gestureGeneration++
+                if (!pinned) {
+                    val current = mode
+                    val rect = current?.let { visibleOnScreen(it.field) }
+                    val location = IntArray(2); shell.getLocationOnScreen(location)
+                    if (current != null && (current.callback is EditorActions || rect == null ||
+                        !rect.contains((event.x + location[0]).toInt(), (event.y + location[1]).toInt()))) dismissSelection()
+                }
+                val point = IntArray(2); shell.getLocationOnScreen(point)
+                val x = point[0] + event.x; val y = point[1] + event.y
+                val field = editors.lastOrNull { it.isEnabled && visibleOnScreen(it)?.contains(x.toInt(), y.toInt()) == true }
+                    ?: return false
+                val origin = IntArray(2); field.getLocationOnScreen(origin)
+                hold = Hold(field, x - origin[0], y - origin[1], event.rawX, event.rawY,
+                    SystemClock.uptimeMillis(), gestureGeneration).also { pressed ->
+                    pendingHold = Runnable {
+                        pendingHold = null
+                        showHold(pressed, afterRelease = false)
+                    }.also { shell.postDelayed(it, ViewConfiguration.getLongPressTimeout().toLong() + 80) }
+                }
+            }
+            MotionEvent.ACTION_MOVE -> hold?.let {
+                if (abs(event.rawX - it.rawX) > touchSlop || abs(event.rawY - it.rawY) > touchSlop) {
+                    it.field.cancelLongPress(); cancelHold(); gestureGeneration++
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                val pressed = hold
+                cancelHold()
+                if (pressed != null && SystemClock.uptimeMillis() - pressed.started >= ViewConfiguration.getLongPressTimeout()) {
+                    cancelNativeUp = pressed.fallbackUsed && !pressed.nativeHandled
+                    // Dispatch runs before EditText receives UP. Recheck afterwards:
+                    // native selection/insertion modes may start asynchronously on release.
+                    pendingHold = Runnable {
+                        pendingHold = null
+                        showHold(pressed, afterRelease = true)
+                    }.also { shell.post(it) }
+                }
+            }
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_DOWN -> {
+                hold?.field?.cancelLongPress(); cancelHold(); gestureGeneration++
+            }
+        }
+        return cancelNativeUp
+    }
+
+    private fun cancelHold() {
+        pendingHold?.let(shell::removeCallbacks); pendingHold = null; hold = null
+    }
+
+    private fun showHold(pressed: Hold, afterRelease: Boolean) {
+        val field = pressed.field
+        if (closed || pressed.generation != gestureGeneration || !field.isEnabled || !field.hasFocus() ||
+            !field.isAttachedToWindow || visibleOnScreen(field) == null) return
+        val current = mode?.takeIf { it.field === field }
+        if (current != null) {
+            if (!field.hasSelection()) { selectAtPress(pressed); pressed.fallbackUsed = true }
+            if (afterRelease) current.show()
+            else refresh()
+            return
+        }
+        if (!field.hasSelection()) { selectAtPress(pressed); pressed.fallbackUsed = true }
+        if (field.length() > 0 || clipboard.hasPrimaryClip()) start(field, EditorActions(field), ActionMode.TYPE_FLOATING)
+    }
+
+    private fun selectAtPress(pressed: Hold) {
+        val field = pressed.field
+        val layout = field.layout ?: return
+        val offset = field.getOffsetForPosition(pressed.x, pressed.y).coerceIn(0, field.length())
+        val x = pressed.x - field.totalPaddingLeft + field.scrollX
+        val y = pressed.y - field.totalPaddingTop + field.scrollY
+        val line = layout.getLineForVertical(y.toInt())
+        if (field.length() == 0 || y < 0 || y >= layout.height ||
+            x < layout.getLineLeft(line) || x >= layout.getLineRight(line)) {
+            field.setSelection(offset); return
+        }
+        val text = field.text.toString()
+        val caret = layout.getPrimaryHorizontal(offset)
+        val rtl = offset > 0 && layout.isRtlCharAt(offset - 1)
+        val index = (if (offset > 0 && (if (rtl) x > caret else x < caret)) offset - 1 else offset)
+            .coerceIn(0, text.length - 1)
+        val words = BreakIterator.getWordInstance(field.textLocale).apply { setText(text) }
+        var start = words.preceding(index + 1).coerceAtLeast(0)
+        var end = words.following(index).let { if (it == BreakIterator.DONE) text.length else it }
+        if (text.substring(start, end).all { it.isWhitespace() }) { field.setSelection(offset); return }
+        // Emoji, combining marks and ZWJ sequences must stay intact.
+        val characters = BreakIterator.getCharacterInstance(field.textLocale).apply { setText(text) }
+        start = minOf(start, characters.preceding(index + 1).coerceAtLeast(0))
+        end = maxOf(end, characters.following(index).let { if (it == BreakIterator.DONE) text.length else it })
+        field.setSelection(start, end)
     }
 
     private fun visibleOnScreen(view: View): Rect? {
@@ -249,11 +349,15 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
     fun close() {
         if (closed) return
         closed = true; mode?.finish()
+        cancelHold()
         longPressFallbacks.forEach { (field, callback) -> field.removeCallbacks(callback) }
         longPressFallbacks.clear()
         pendingEdits.forEach { (field, callback) -> field.removeCallbacks(callback) }; pendingEdits.clear()
         watchers.forEach { (field, watcher) -> field.removeTextChangedListener(watcher) }; watchers.clear()
-        editors.forEach { it.setOnLongClickListener(null) }; editors.clear()
+        editors.forEach {
+            it.setOnLongClickListener(null)
+            if (it is OverlayEditText) it.onLongPressResult = null
+        }; editors.clear()
         if (shell.viewTreeObserver.isAlive) shell.viewTreeObserver.removeOnPreDrawListener(update)
         (toolbar.parent as? android.view.ViewGroup)?.removeView(toolbar)
         shell.textActions = null
@@ -314,6 +418,10 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
             hidden = duration != 0L
             if (hidden) shell.postDelayed(reveal, if (duration < 0) ViewConfiguration.getDefaultActionModeHideDuration().toLong() else duration)
             refresh()
+        }
+        fun show() {
+            if (finished) return
+            shell.removeCallbacks(reveal); hidden = false; refresh()
         }
         override fun finish() {
             if (finished) return

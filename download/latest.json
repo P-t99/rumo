@@ -1,8 +1,8 @@
 {
-  "versionCode": 10,
-  "versionName": "0.4.6",
-  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.6.apk",
-  "sha256": "ec980cac1d69e9beb9218d19e79357d9cfd91293fbbd2858ad5f387abb56ebd3",
+  "versionCode": 11,
+  "versionName": "0.4.7",
+  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.7.apk",
+  "sha256": "3eae5806b830f2b6e022b0f118dc46fa2b196f9c0868acf9648cbd65b6389c30",
   "minSdk": 26,
-  "notes": "默认改为长按选词后在选区附近显示全选、复制、剪切和粘贴，长按空白正文或光标处可粘贴，不再常驻占用正文高度。设置保留“始终显示编辑工具栏”，默认关闭、自动保存。输入或再次点正文时收起菜单；菜单不越界，保留草稿、焦点与布局。"
+  "notes": "修复 0.4.6 部分手机长按不生效：悬浮窗独立识别持续按住，系统未选词时按触点补选，空白正文可粘贴；避免松手把选区清掉。滑动、取消和失焦终止待触发操作。保留按需菜单及可选常驻栏，草稿、焦点和布局继续保存。"
 }

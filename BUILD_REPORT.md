@@ -1,3 +1,21 @@
+# 0.4.7 真实触摸长按兼容验证
+
+日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 11。
+
+- `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-build-cache` 成功。
+- 13 个套件、92 项测试通过，0 失败 / 错误 / 跳过；Lint 0 错误、17 条非阻断警告、1 条提示。
+- 新增 9 项真实触摸事件回归：按下 → 持续按住 → 松手、空白粘贴、系统消费长按却不选词 / 不创建菜单、完全不触发原长按回调、普通点击、纵向滚动、取消触摸、中文与 emoji 字符簇。
+- 新回归从 FloatingX 窗口派发 SOURCE_TOUCHSCREEN 事件并推进系统长按超时，不通过直接调用 performLongClick 触发目标操作。菜单、复制内容和焦点均有断言。
+- 旧版在模拟“系统消费长按但不创建文字编辑模式”时，选词与粘贴两项回归失败；修改后通过。原 83 项回归继续通过。
+- 文字测试使用 Robolectric API 34 和原生字体度量，显式模拟窗口焦点；分类器使用 NO_OP，因为测试环境没有真实智能选词服务。测试不能代替手机厂商行为验证。
+- 不使用隐藏生产 API；菜单仍是同一悬浮窗口中的子视图，实际编辑调用公开 EditText 操作。
+- APK：`Rumo-Flomo-0.4.7-test.apk`，2,279,423 字节，SHA-256 `3eae5806b830f2b6e022b0f118dc46fa2b196f9c0868acf9648cbd65b6389c30`。
+- 原签名证书：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`，可覆盖安装保留配置和草稿。最终 APK 已检查包名、版本、独立长按回传代码与原默认更新地址。
+
+手机型号与系统版本尚未取得；真实厂商选区手柄、放大镜、输入法、微信和系统安装器仍待用户验证。操作见 [TESTING.md](TESTING.md)，发布与回退记录见 [PUBLISH_0.4.7.md](docs/PUBLISH_0.4.7.md)。
+
+---
+
 # 0.4.6 按需文字编辑菜单验证
 
 日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 10。

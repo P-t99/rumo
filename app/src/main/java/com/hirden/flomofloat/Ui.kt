@@ -87,7 +87,7 @@ object Ui {
         setPadding(dp(c, 14), dp(c, 6), dp(c, 14), dp(c, 6))
         setOnClickListener { action() }
     }
-    fun edit(c: Context, hint: String): EditText = EditText(c).apply {
+    fun edit(c: Context, hint: String): EditText = OverlayEditText(c).apply {
         this.hint = hint; textSize = 15f; textColor(this, ink)
         bind(this, "editor") { palette ->
             setHintTextColor(palette[muted]); highlightColor = (palette[green] and 0x00ffffff) or 0x44000000
