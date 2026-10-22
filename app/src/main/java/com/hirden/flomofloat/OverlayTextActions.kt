@@ -126,7 +126,9 @@ class OverlayTextActions(private val shell: SwipeLayout, private val focus: (Edi
         } else {
             host?.addView(toolbar, FrameLayout.LayoutParams(1, Ui.dp(shell.context, 40), Gravity.TOP or Gravity.LEFT))
         }
-        toolbar.elevation = if (pinned) 0f else Ui.dp(shell.context, 10).toFloat()
+        // Contextual mode is a sibling of the opaque card (12dp elevation).
+        // Its Z must be above the card for both painting and touch dispatch.
+        toolbar.elevation = if (pinned) 0f else shell.z + Ui.dp(shell.context, 4)
         Ui.background(toolbar, if (pinned) Ui.bg else Ui.surface, 8, if (pinned) null else Ui.line)
         buttons.values.forEach {
             Ui.textColor(it, if (pinned) Ui.green else Ui.ink)

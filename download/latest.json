@@ -1,8 +1,8 @@
 {
-  "versionCode": 11,
-  "versionName": "0.4.7",
-  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.7.apk",
-  "sha256": "3eae5806b830f2b6e022b0f118dc46fa2b196f9c0868acf9648cbd65b6389c30",
+  "versionCode": 12,
+  "versionName": "0.4.8",
+  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.8.apk",
+  "sha256": "73fb2ae6f15627db9e84de2f5f4558263fcec3706ac2e07f8c107fe6dcac5020",
   "minSdk": 26,
-  "notes": "修复 0.4.6 部分手机长按不生效：悬浮窗独立识别持续按住，系统未选词时按触点补选，空白正文可粘贴；避免松手把选区清掉。滑动、取消和失焦终止待触发操作。保留按需菜单及可选常驻栏，草稿、焦点和布局继续保存。"
+  "notes": "修复长按能选中文字，却看不到、点不到编辑菜单的问题。菜单现显示在笔记卡片上方；无需新增权限。保留 API、草稿、布局与主题。若此前开启常驻工具栏，请在设置 → 文字编辑关闭该选项，再测试长按菜单。"
 }

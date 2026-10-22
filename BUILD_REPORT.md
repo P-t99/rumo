@@ -1,3 +1,19 @@
+# 0.4.8 文字菜单遮挡修复验证
+
+日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 12。
+
+- 用户反馈：小米 17 Pro Max、HyperOS 3.03、入墨 0.4.7 能选中文字但无菜单，常驻工具栏的编辑按钮正常。没有直接连接或操作该手机。
+- 已确认的代码错误：悬浮卡片 elevation 为 12dp，而作为同级子视图的菜单为 10dp。visibility=VISIBLE 不代表菜单未被遮挡；旧测试通过 performClick 直接调用按钮，也绕过了真实触摸命中。
+- 新增两个回归：在原生 Canvas 中绘制完整窗口，用独特实色验证菜单没有被卡片覆盖；从窗口根视图派发实际点击，验证复制按钮收到点击并写入正确选区。旧代码两项均失败：菜单像素被卡片覆盖、点击未复制；修复后两项通过。
+- 修复仅让菜单 elevation 根据卡片当前 Z 值增加 4dp；保留按需菜单与可选常驻栏的现有行为。
+- `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-build-cache` 成功。13 个套件、94 项测试通过，0 失败 / 错误 / 跳过；Lint 0 错误、17 条非阻断警告、1 条提示。
+- APK：`Rumo-Flomo-0.4.8-test.apk`，2,279,423 字节，SHA-256 `73fb2ae6f15627db9e84de2f5f4558263fcec3706ac2e07f8c107fe6dcac5020`。
+- 原分发签名 `227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`，可覆盖安装保留 API、草稿和布局。最终 APK 的包名、code 12、0.4.8 与原默认更新源已检查。
+
+自动化使用 Robolectric API 34 及原生字体与绘制。没有小米实机验证；厂商选区手柄、放大镜、真实输入法与微信仍需用户确认。若此前开启了常驻工具栏，升级保留该选项，测试按需菜单前请关闭。操作见 [TESTING.md](TESTING.md)，发布记录见 [PUBLISH_0.4.8.md](docs/PUBLISH_0.4.8.md)。
+
+---
+
 # 0.4.7 真实触摸长按兼容验证
 
 日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 11。

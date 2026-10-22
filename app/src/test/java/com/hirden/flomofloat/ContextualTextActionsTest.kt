@@ -4,6 +4,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Rect
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Looper
 import android.os.SystemClock
 import android.view.InputDevice
@@ -206,6 +209,43 @@ class ContextualTextActionsTest {
         click(R.id.text_copy)
         assertEquals(selected, clipboard.primaryClip!!.getItemAt(0).text.toString())
         assertEquals("hello world", LocalStore(service).draft().text)
+        assertEquals(View.GONE, toolbar.visibility); assertEquals(before, frame()); active()
+    }
+    @Test fun contextualMenuIsActuallyPaintedAboveTheOpaqueEditorCard() {
+        longPress("hello world")
+        assertEquals(View.VISIBLE, toolbar.visibility)
+        // A unique solid paint makes occlusion measurable without relying on
+        // fonts or a visibility flag; all views keep their production Z order.
+        toolbar.setBackgroundColor(Color.MAGENTA)
+        for (i in 0 until toolbar.childCount) (toolbar.getChildAt(i) as Button).apply {
+            setBackgroundColor(Color.MAGENTA); setTextColor(Color.MAGENTA)
+        }
+        val bitmap = Bitmap.createBitmap(root.width, root.height, Bitmap.Config.ARGB_8888)
+        try {
+            root.draw(Canvas(bitmap))
+            val x = (toolbar.left + toolbar.translationX + toolbar.width / 2f).toInt()
+            val y = (toolbar.top + toolbar.translationY + toolbar.height / 2f).toInt()
+            assertEquals("A visible menu must be painted above the opaque card", Color.MAGENTA, bitmap.getPixel(x, y))
+        } finally { bitmap.recycle() }
+    }
+    @Test fun realWindowTapHitsCopyInsteadOfTheCardBehindTheContextualMenu() {
+        longPress("hello world")
+        val selected = field.text.subSequence(field.selectionStart, field.selectionEnd).toString()
+        val before = frame()
+        val button = root.findViewById<Button>(R.id.text_copy)
+        val b = IntArray(2); button.getLocationOnScreen(b)
+        val p = IntArray(2); root.getLocationOnScreen(p)
+        val x = b[0] - p[0] + button.width / 2f
+        val y = b[1] - p[1] + button.height / 2f
+        val down = SystemClock.uptimeMillis()
+        for (action in intArrayOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
+            MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, y, 0).let {
+                it.source = InputDevice.SOURCE_TOUCHSCREEN
+                root.dispatchTouchEvent(it); it.recycle()
+            }
+        }
+        idle(); layout()
+        assertEquals("Tapping the drawn Copy button must reach that button", selected, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
         assertEquals(View.GONE, toolbar.visibility); assertEquals(before, frame()); active()
     }
     @Test fun longPressEmptyNoteOffersPasteAtTheCaret() {

@@ -7,7 +7,7 @@
 Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
-- 当前源码版本：**0.4.7 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.7
+- 当前源码版本：**0.4.8 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.8
 - 许可：[MIT](LICENSE)
 - [下载入墨](https://rumo-flomo-updates.thd20x.chatgpt.site) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
 
@@ -85,7 +85,7 @@ cd rumo
 - `FlomoClient`、`NoteProtocol`：请求与结果；`SwipeLayout`：手势。
 - `SettingsContent`：共用设置；`AppUpdates`：下载、校验和安装。
 
-我通过与 AI 协作完成调研、实现和构建，再根据实机试用反馈修改交互。0.4.7 源码完成构建，92 项自动化测试全部通过，Lint 0 错误，APK 编译与原测试证书签名验证通过。Robolectric 测试不能代替不同手机的悬浮权限、后台策略、Keystore 和系统安装器验证。参见 [构建记录](BUILD_REPORT.md)、[架构说明](docs/ARCHITECTURE.md)。
+我通过与 AI 协作完成调研、实现和构建，再根据实机试用反馈修改交互。0.4.8 源码完成构建，94 项自动化测试全部通过，Lint 0 错误，APK 编译与原测试证书签名验证通过。Robolectric 测试不能代替不同手机的悬浮权限、后台策略、Keystore 和系统安装器验证。参见 [构建记录](BUILD_REPORT.md)、[架构说明](docs/ARCHITECTURE.md)。
 
 欢迎反馈手机型号、系统版本和复现步骤，截图请隐藏 API 与私人笔记。参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
