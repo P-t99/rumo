@@ -49,6 +49,7 @@ class CaptureService : Service() {
         if (key == "overlay_mode" || key == "overlay_transparency") applyAppearance()
         if (key == "layout_reset_revision") panelLayout?.reset()
         if (key == AppTheme.PREFERENCE) refreshTheme()
+        if (key == LocalStore.EDIT_TOOLBAR_PREFERENCE) panelEditing?.refreshPreference()
     }
     private var editor: FxControl? = null
     private var panelLayout: PanelWindowController? = null
@@ -258,7 +259,9 @@ class CaptureService : Service() {
             it.show(); layout.attach(it)
             panelInput = (shell.parent as? FxWindowContainer)?.let { container ->
                 OverlayInputController(container, intArrayOf(R.id.note_input, R.id.note_tags, R.id.api_input,
-                    R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed))
+                    R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed)) {
+                    panelEditing?.dismissSelection() ?: false
+                }
             }
             panelEditing = OverlayTextActions(shell as SwipeLayout) { field -> panelInput?.focusEditor(field.id) }
         }
@@ -314,6 +317,7 @@ class CaptureService : Service() {
     private fun refreshTheme() {
         setTheme(AppTheme.style(this))
         editor?.contentView?.let(Ui::refresh)
+        panelEditing?.refreshTheme()
         bubble?.contentView?.let(Ui::refresh)
     }
     override fun onDestroy() {

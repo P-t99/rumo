@@ -49,6 +49,7 @@ class OverlayTextActionsTest {
     @Before fun setup() {
         val app = org.robolectric.RuntimeEnvironment.getApplication()
         app.getSharedPreferences("rumo_private", Context.MODE_PRIVATE).edit().clear().commit()
+        LocalStore(app).saveAlwaysShowEditToolbar(true)
         app.getSharedPreferences("rumo_updates", Context.MODE_PRIVATE).edit().putBoolean("auto", false).commit()
         controller = Robolectric.buildService(CaptureService::class.java).create()
         service = controller.get(); call("expand"); idle(); root = currentRoot()

@@ -7,7 +7,7 @@
 Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
-- 当前源码版本：**0.4.4 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.4
+- 当前源码版本：**0.4.6 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.6
 - 许可：[MIT](LICENSE)
 - [下载入墨](https://rumo-flomo-updates.thd20x.chatgpt.site) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
 
@@ -20,7 +20,7 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 | 功能 | 行为 |
 | --- | --- |
 | 悬浮速记 | 在其他 APP 上方记录文字与标签，一键存入 flomo |
-| 文字编辑 | 长按选词与拖动选区；顶部工具栏支持全选、复制、剪切、粘贴，跟随当前输入框 |
+| 文字编辑 | 长按选词后显示菜单，长按光标处粘贴；常驻工具栏为可选兼容模式，默认关闭 |
 | 两种入口 | 贴边竖条 / 悬浮球，分别记住位置 |
 | 入口透明度 | 0–80%，即时保存；编辑窗口保持清晰 |
 | 快速收起 | 按钮、轻左滑、双击标题或空白；正文保留双击选词 |
@@ -49,7 +49,7 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 
 展开后拖动左上方圆点可移动窗口，拖动右下角斜线可改变宽高，松手后自动保存。输入法避让不会覆盖记住的大小；浮动 / 分离式输入法可能不提供占用区域信息，可手动移动或缩放窗口。点击标题栏“重置”会清除笔记、设置两类窗口的横竖屏布局记忆。
 
-在正文长按选词并拖动选区，或点击顶部“全选”；随后可复制、剪切、粘贴。工具栏跟随当前输入框，支持正文、标签和悬浮设置；API 遮挡时需先勾选“显示地址”才能复制或剪切。
+在正文长按选词并拖动选区，在附近出现的菜单中全选、复制、剪切或粘贴；空白正文或光标处长按可粘贴。默认没有常驻工具栏，不占正文高度。主界面或悬浮设置中的“文字编辑 → 始终显示编辑工具栏”可开启兼容模式，选择自动保存。API 遮挡时需先勾选“显示地址”才能复制或剪切。
 
 在主界面或悬浮设置的“外观主题”中选择浅色、深色或跟随系统。默认跟随系统；主界面、悬浮笔记、设置和入口一起适配。切换保留正在编辑的内容、光标、窗口布局和输入焦点。
 
@@ -85,7 +85,7 @@ cd rumo
 - `FlomoClient`、`NoteProtocol`：请求与结果；`SwipeLayout`：手势。
 - `SettingsContent`：共用设置；`AppUpdates`：下载、校验和安装。
 
-我通过与 AI 协作完成调研、实现和构建，再根据实机试用反馈修改交互。0.4.4 源码完成构建，69 项自动化测试全部通过，Lint 0 错误，APK 编译与原测试证书签名验证通过。Robolectric 测试不能代替不同手机的悬浮权限、后台策略、Keystore 和系统安装器验证。参见 [构建记录](BUILD_REPORT.md)、[架构说明](docs/ARCHITECTURE.md)。
+我通过与 AI 协作完成调研、实现和构建，再根据实机试用反馈修改交互。0.4.6 源码完成构建，83 项自动化测试全部通过，Lint 0 错误，APK 编译与原测试证书签名验证通过。Robolectric 测试不能代替不同手机的悬浮权限、后台策略、Keystore 和系统安装器验证。参见 [构建记录](BUILD_REPORT.md)、[架构说明](docs/ARCHITECTURE.md)。
 
 欢迎反馈手机型号、系统版本和复现步骤，截图请隐藏 API 与私人笔记。参与开发见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 

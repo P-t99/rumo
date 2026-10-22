@@ -11,4 +11,5 @@
     <item name="theme_light" type="id" /><item name="theme_dark" type="id" />
     <item name="text_edit_toolbar" type="id" /><item name="text_select_all" type="id" />
     <item name="text_copy" type="id" /><item name="text_cut" type="id" /><item name="text_paste" type="id" />
+    <item name="always_show_edit_toolbar" type="id" />
 </resources>

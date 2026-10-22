@@ -10,7 +10,9 @@ import android.view.inputmethod.InputMethodManager
 import com.petterp.floatingx.system.container.FxWindowContainer
 
 /** Input ownership starts on opening a note or touching an editor, and ends outside the panel. */
-class OverlayInputController(private val container: FxWindowContainer, ids: IntArray) {
+class OverlayInputController(private val container: FxWindowContainer, ids: IntArray,
+    private val dismissTextActions: () -> Boolean = { false }
+) {
     private val fields: List<View> = ids.map { container.contentView?.findViewById<View>(it) }.filterNotNull()
     private val imm = container.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     private var activeField: View? = null
@@ -48,7 +50,7 @@ class OverlayInputController(private val container: FxWindowContainer, ids: IntA
                 false
             }
         }
-        container.onImeBack = { releaseInput(hideKeyboard = true) }
+        container.onImeBack = { if (!dismissTextActions()) releaseInput(hideKeyboard = true) }
     }
 
     fun focusEditor(id: Int) {

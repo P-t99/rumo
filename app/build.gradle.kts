@@ -14,8 +14,8 @@ android {
         applicationId = "com.hirden.flomofloat"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.4.4"
+        versionCode = 10
+        versionName = "0.4.6"
     }
     buildFeatures { buildConfig = true }
     signingConfigs {

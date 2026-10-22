@@ -65,6 +65,10 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         prefs.edit().putString("overlay_mode", value.mode.name).putInt("overlay_transparency", value.transparency).apply()
     }
     fun themeMode() = ThemeMode.parse(prefs.getString(AppTheme.PREFERENCE, null))
+    fun alwaysShowEditToolbar() = prefs.getBoolean(EDIT_TOOLBAR_PREFERENCE, false)
+    fun saveAlwaysShowEditToolbar(value: Boolean) {
+        check(prefs.edit().putBoolean(EDIT_TOOLBAR_PREFERENCE, value).commit()) { "Local storage unavailable" }
+    }
     fun saveThemeMode(value: ThemeMode) {
         check(prefs.edit().putString(AppTheme.PREFERENCE, value.name).commit()) { "Local storage unavailable" }
     }
@@ -118,5 +122,8 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         get() = prefs.getString("last_status", "") ?: ""
         set(value) { prefs.edit().putString("last_status", value).apply() }
 
-    companion object { private const val KEY_ALIAS = "hirden_flomofloat_api_v1" }
+    companion object {
+        const val EDIT_TOOLBAR_PREFERENCE = "always_show_edit_toolbar"
+        private const val KEY_ALIAS = "hirden_flomofloat_api_v1"
+    }
 }

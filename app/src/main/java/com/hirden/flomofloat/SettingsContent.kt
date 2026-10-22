@@ -26,14 +26,17 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
     private val updateObserver: () -> Unit = { refreshUpdate() }
     private var appearanceRefresh: (() -> Unit)? = null
     private var themeRefresh: (() -> Unit)? = null
+    private var editingRefresh: (() -> Unit)? = null
     private val appearanceObserver = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "overlay_mode" || key == "overlay_transparency") appearanceRefresh?.invoke()
         if (key == AppTheme.PREFERENCE) { themeRefresh?.invoke(); Ui.refresh(this) }
+        if (key == LocalStore.EDIT_TOOLBAR_PREFERENCE) editingRefresh?.invoke()
     }
     init {
         orientation = VERTICAL
         addTheme()
         addAppearance()
+        addEditing()
         val layoutCard = card("展开窗口布局")
         Ui.add(layoutCard, Ui.text(context, "拖动顶部圆点移动，拖动右下角缩放。尺寸与位置自动保存在本机，笔记 / 设置及横竖屏分别记忆。默认窗口位于上方，为键盘留出空间；只有确实放不下时才临时调整。展开笔记即可输入，点到窗外即可输入其他应用。", 12f, Ui.muted), 6)
         Ui.add(layoutCard, Ui.button(context, "重置窗口布局") {
@@ -128,6 +131,27 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         Ui.add(updateCard, Ui.text(context, "使用期间每 6 小时检查一次。已下载的安装包会复用；安装时需要系统确认。", 12f, Ui.muted), 9)
         Ui.add(this, Ui.text(context, "基于 FloatingX 3.0.0 · 非 flomo 官方客户端\nAPI 加密保存，草稿仅存本机。", 11f, Ui.muted), 18)
         refreshUpdate()
+    }
+    private fun addEditing() {
+        val panel = card("文字编辑")
+        var rendering = false
+        val pinned = CheckBox(context).apply {
+            id = R.id.always_show_edit_toolbar
+            text = "始终显示编辑工具栏"; textSize = 14f; isSaveEnabled = false
+            Ui.control(this)
+        }
+        fun render() {
+            rendering = true
+            try { pinned.isChecked = store.alwaysShowEditToolbar() } finally { rendering = false }
+        }
+        editingRefresh = { render() }
+        render()
+        pinned.setOnCheckedChangeListener { _, value ->
+            if (!rendering) runCatching { store.saveAlwaysShowEditToolbar(value) }
+                .onFailure { render(); toast("编辑偏好保存失败，请重试") }
+        }
+        Ui.add(panel, pinned, 4)
+        Ui.add(panel, Ui.text(context, "默认长按选词后显示菜单；长按光标位置可粘贴。若手机操作不便，可开启顶部常驻工具栏。选择自动保存。", 12f, Ui.muted), 6)
     }
     private fun addTheme() {
         val panel = card("外观主题")
@@ -232,7 +256,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         updateAction.isEnabled = !updates.working && updates.downloadId == -1L && updates.feed.isNotBlank()
         updateAction.alpha = if (updateAction.isEnabled) 1f else .5f
     }
-    override fun onAttachedToWindow() { super.onAttachedToWindow(); updates.observe(updateObserver); store.observeAppearance(appearanceObserver); appearanceRefresh?.invoke(); themeRefresh?.invoke(); Ui.refresh(this) }
+    override fun onAttachedToWindow() { super.onAttachedToWindow(); updates.observe(updateObserver); store.observeAppearance(appearanceObserver); appearanceRefresh?.invoke(); themeRefresh?.invoke(); editingRefresh?.invoke(); Ui.refresh(this) }
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) { super.onConfigurationChanged(newConfig); Ui.refresh(this) }
     override fun onDetachedFromWindow() { updates.remove(updateObserver); store.removeAppearanceObserver(appearanceObserver); super.onDetachedFromWindow() }
     private fun toast(value: String) { Toast.makeText(context, value, Toast.LENGTH_LONG).show() }

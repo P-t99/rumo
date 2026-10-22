@@ -1,3 +1,19 @@
+# 0.4.6 按需文字编辑菜单验证
+
+日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 10。
+
+- `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug --no-build-cache` 成功。
+- 13 个套件、83 项测试通过，0 失败 / 错误 / 跳过；Lint 0 错误、17 条非阻断警告、1 条提示。
+- 新增 14 项按需菜单回归，覆盖默认无常驻占位、长按选词 / 空白粘贴、全选后复制、菜单内复制保留草稿和焦点、两次返回处理、窗外释放、过期菜单取消、兼容选项实时切换 / 持久化、主界面 / 悬浮设置同步、窗口 / 键盘可见区域边界、深浅主题及滚动隐藏。
+- 保留上一版 8 项常驻工具栏回归，测试中显式开启兼容选项；原焦点、布局、主题与更新回归继续通过。
+- 菜单作为同一 WindowManager 容器内的子视图显示，使用 Android 原生选区生命周期和编辑操作；若长按只选择文字却未创建 ActionMode，延后补出菜单并校验当前焦点和手势代次。
+- APK：`Rumo-Flomo-0.4.6-test.apk`，2,275,327 字节，SHA-256 `ec980cac1d69e9beb9218d19e79357d9cfd91293fbbd2858ad5f387abb56ebd3`。
+- 原分发证书签名与验证通过：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`，可覆盖安装保留配置与草稿；实际 APK 已检查包名、code 10、版本 0.4.6 及兼容选项代码。
+
+测试基于 Robolectric API 34，显式模拟窗口焦点，并为程序化滚动补发绘制事件。厂商选区手柄、真实系统剪贴板、浮动输入法与微信仍待实机验证。新版不使用隐藏 API，也不依赖指定输入法。操作步骤见 [TESTING.md](TESTING.md)，发布与回退记录见 [PUBLISH_0.4.6.md](docs/PUBLISH_0.4.6.md)。
+
+---
+
 # 0.4.4 悬浮文字编辑验证
 
 日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 8。
