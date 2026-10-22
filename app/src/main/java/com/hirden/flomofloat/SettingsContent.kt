@@ -2,7 +2,6 @@ package com.hirden.flomofloat
 
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Color
 import android.text.InputType
 import android.text.method.PasswordTransformationMethod
 import android.view.View
@@ -26,34 +25,48 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
     }
     private val updateObserver: () -> Unit = { refreshUpdate() }
     private var appearanceRefresh: (() -> Unit)? = null
+    private var themeRefresh: (() -> Unit)? = null
+    private var editingRefresh: (() -> Unit)? = null
     private val appearanceObserver = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "overlay_mode" || key == "overlay_transparency") appearanceRefresh?.invoke()
+        if (key == AppTheme.PREFERENCE) { themeRefresh?.invoke(); Ui.refresh(this) }
+        if (key == LocalStore.EDIT_TOOLBAR_PREFERENCE) editingRefresh?.invoke()
     }
     init {
         orientation = VERTICAL
+        addTheme()
         addAppearance()
+        addEditing()
+        val layoutCard = card("展开窗口布局")
+        Ui.add(layoutCard, Ui.text(context, "拖动顶部圆点移动，拖动右下角缩放。尺寸与位置自动保存在本机，笔记 / 设置及横竖屏分别记忆。默认窗口位于上方，为键盘留出空间；只有确实放不下时才临时调整。展开笔记即可输入，点到窗外即可输入其他应用。", 12f, Ui.muted), 6)
+        Ui.add(layoutCard, Ui.button(context, "重置窗口布局") {
+            runCatching { store.resetPanelLayouts() }.onSuccess { toast("窗口大小和位置已重置，草稿、API 和标签保留") }
+                .onFailure { toast("重置失败，请重试") }
+        }, 10)
         val apiCard = card("连接 flomo")
         Ui.add(apiCard, Ui.text(context, "粘贴 flomo 设置 → API 中的完整地址。", 12f, Ui.muted), 6)
         val api = Ui.edit(context, "https://flomoapp.com/iwh/…").apply {
             id = R.id.api_input; contentDescription = "flomo API 地址"; isSaveEnabled = false
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            setSingleLine(true)
             transformationMethod = PasswordTransformationMethod.getInstance()
-            setSingleLine(true); setText(store.api())
+            setText(store.api())
         }
         Ui.add(apiCard, api, 12)
         val apiMessage = Ui.text(context, when { store.apiReadFailed -> "读取失败，请重新保存 API"; api.text.isNotBlank() -> "已加密保存在本机"; else -> "尚未填写 API" }, 12f, Ui.muted)
         val reveal = CheckBox(context).apply {
-            text = "显示地址"; textSize = 12f; setTextColor(Ui.muted)
+            text = "显示地址"; textSize = 12f; Ui.textColor(this, Ui.muted)
+            Ui.control(this, Ui.muted)
             setOnCheckedChangeListener { _, checked -> api.transformationMethod = if (checked) null else PasswordTransformationMethod.getInstance(); api.setSelection(api.length()) }
         }
         Ui.add(apiCard, reveal)
         Ui.add(apiCard, Ui.button(context, "保存 API", true) {
             val value = api.text.toString().trim()
             val error = EndpointPolicy.error(value)
-            if (error != null) { apiMessage.text = error; apiMessage.setTextColor(Ui.red) }
+            if (error != null) { apiMessage.text = error; Ui.textColor(apiMessage, Ui.red) }
             else runCatching { store.saveApi(value) }.onSuccess {
-                apiMessage.text = "已加密保存在本机"; apiMessage.setTextColor(Ui.green); toast("API 已保存")
-            }.onFailure { apiMessage.text = "保存失败，请重试"; apiMessage.setTextColor(Ui.red) }
+                apiMessage.text = "已加密保存在本机"; Ui.textColor(apiMessage, Ui.green); toast("API 已保存")
+            }.onFailure { apiMessage.text = "保存失败，请重试"; Ui.textColor(apiMessage, Ui.red) }
         })
         Ui.add(apiCard, apiMessage, 7)
         Ui.add(apiCard, Ui.button(context, "清除 API") {
@@ -85,10 +98,10 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         Ui.add(tagCard, Ui.button(context, "保存标签", true) {
             val values = fields.map { NoteProtocol.tags(it.text.toString()).removePrefix("#") }
             if (values.any { it.isBlank() || it.contains(" ") || it.length > 24 } || values.distinct().size != 3) {
-                tagMessage.text = "请填写三个不同的标签，每个不超过 24 字且不含空格"; tagMessage.setTextColor(Ui.red)
+                tagMessage.text = "请填写三个不同的标签，每个不超过 24 字且不含空格"; Ui.textColor(tagMessage, Ui.red)
             } else runCatching { store.saveTags(values, defaults.text.toString()) }.onSuccess {
-                defaults.setText(store.defaultTags()); tagMessage.text = "已保存，新笔记自动使用默认标签"; tagMessage.setTextColor(Ui.green); toast("标签已保存")
-            }.onFailure { tagMessage.text = "保存失败，请重试"; tagMessage.setTextColor(Ui.red) }
+                defaults.setText(store.defaultTags()); tagMessage.text = "已保存，新笔记自动使用默认标签"; Ui.textColor(tagMessage, Ui.green); toast("标签已保存")
+            }.onFailure { tagMessage.text = "保存失败，请重试"; Ui.textColor(tagMessage, Ui.red) }
         }, 10)
         Ui.add(tagCard, tagMessage, 6)
 
@@ -102,7 +115,8 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         Ui.add(updateCard, Ui.text(context, "更新源地址（已预置入墨通道，留空可恢复）", 12f, Ui.muted), 12)
         Ui.add(updateCard, feed, 7)
         val automatic = CheckBox(context).apply {
-            text = "自动检查更新"; textSize = 14f; setTextColor(Ui.ink); isChecked = updates.autoCheck
+            text = "自动检查更新"; textSize = 14f; Ui.textColor(this, Ui.ink); isChecked = updates.autoCheck
+            Ui.control(this)
         }
         Ui.add(updateCard, automatic, 2)
         Ui.add(updateCard, Ui.button(context, "保存更新设置") {
@@ -118,13 +132,67 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         Ui.add(this, Ui.text(context, "基于 FloatingX 3.0.0 · 非 flomo 官方客户端\nAPI 加密保存，草稿仅存本机。", 11f, Ui.muted), 18)
         refreshUpdate()
     }
+    private fun addEditing() {
+        val panel = card("文字编辑")
+        var rendering = false
+        val pinned = CheckBox(context).apply {
+            id = R.id.always_show_edit_toolbar
+            text = "始终显示编辑工具栏"; textSize = 14f; isSaveEnabled = false
+            Ui.control(this)
+        }
+        fun render() {
+            rendering = true
+            try { pinned.isChecked = store.alwaysShowEditToolbar() } finally { rendering = false }
+        }
+        editingRefresh = { render() }
+        render()
+        pinned.setOnCheckedChangeListener { _, value ->
+            if (!rendering) runCatching { store.saveAlwaysShowEditToolbar(value) }
+                .onFailure { render(); toast("编辑偏好保存失败，请重试") }
+        }
+        Ui.add(panel, pinned, 4)
+        Ui.add(panel, Ui.text(context, "默认长按选词后显示菜单；长按光标位置可粘贴。若手机操作不便，可开启顶部常驻工具栏。选择自动保存。", 12f, Ui.muted), 6)
+    }
+    private fun addTheme() {
+        val panel = card("外观主题")
+        val modes = android.widget.RadioGroup(context).apply {
+            id = R.id.theme_modes; orientation = HORIZONTAL; isSaveEnabled = false
+        }
+        val choices = listOf(R.id.theme_system to "跟随系统", R.id.theme_light to "浅色", R.id.theme_dark to "深色")
+        for ((id, label) in choices) {
+            modes.addView(android.widget.RadioButton(context).apply {
+                this.id = id; text = label; textSize = 14f; isSaveEnabled = false
+                Ui.control(this)
+            }, LayoutParams(0, Ui.dp(context, 48), 1f))
+        }
+        var rendering = false
+        fun render() {
+            rendering = true
+            try { modes.check(when (store.themeMode()) {
+                ThemeMode.SYSTEM -> R.id.theme_system
+                ThemeMode.LIGHT -> R.id.theme_light
+                ThemeMode.DARK -> R.id.theme_dark
+            }) } finally { rendering = false }
+        }
+        themeRefresh = { render() }
+        render()
+        modes.setOnCheckedChangeListener { _, id ->
+            if (!rendering) {
+                val mode = when (id) { R.id.theme_light -> ThemeMode.LIGHT; R.id.theme_dark -> ThemeMode.DARK; else -> ThemeMode.SYSTEM }
+                runCatching { store.saveThemeMode(mode) }.onFailure { render(); toast("主题保存失败，请重试") }
+            }
+        }
+        Ui.add(panel, modes, 6)
+        Ui.add(panel, Ui.text(context, "即时生效并自动保存。跟随系统时，随系统深色模式自动切换。", 12f, Ui.muted), 6)
+    }
     private fun addAppearance() {
         val panel = card("悬浮入口")
         val initial = store.appearance()
         val modes = android.widget.RadioGroup(context).apply { orientation = HORIZONTAL; isSaveEnabled = false }
         for ((id, label) in listOf(R.id.mode_edge to "贴边竖条", R.id.mode_ball to "悬浮球")) {
             modes.addView(android.widget.RadioButton(context).apply {
-                this.id = id; text = label; textSize = 14f; setTextColor(Ui.ink); isSaveEnabled = false
+                this.id = id; text = label; textSize = 14f; Ui.textColor(this, Ui.ink); isSaveEnabled = false
+                Ui.control(this)
                 minHeight = Ui.dp(context, 48)
             }, LayoutParams(0, Ui.dp(context, 48), 1f))
         }
@@ -135,9 +203,10 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         val seek = android.widget.SeekBar(context).apply {
             id = R.id.floating_transparency; contentDescription = "悬浮入口透明度"; isSaveEnabled = false
             max = 80; progress = initial.transparency
+            Ui.seek(this)
         }
         Ui.add(panel, seek, 4, Ui.dp(context, 48))
-        val preview = android.widget.FrameLayout(context).apply { background = Ui.shape(context, Ui.bg, 10) }
+        val preview = android.widget.FrameLayout(context).apply { Ui.background(this, Ui.bg, 10) }
         Ui.add(panel, preview, 5, Ui.dp(context, 72))
         var rendering = false
         fun render() {
@@ -170,7 +239,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         Ui.add(panel, Ui.text(context, "即时生效并自动保存。0% 最清晰，80% 更淡；编辑笔记时保持清晰。", 12f, Ui.muted), 8)
     }
     private fun card(title: String): LinearLayout = Ui.column(context, 16).also {
-        it.background = Ui.shape(context, Color.WHITE, 12, Ui.line)
+        Ui.background(it, Ui.surface, 12, Ui.line)
         Ui.add(this, it, if (childCount == 0) 0 else 12)
         Ui.add(it, Ui.text(context, title, 16f, bold = true))
     }
@@ -187,7 +256,8 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         updateAction.isEnabled = !updates.working && updates.downloadId == -1L && updates.feed.isNotBlank()
         updateAction.alpha = if (updateAction.isEnabled) 1f else .5f
     }
-    override fun onAttachedToWindow() { super.onAttachedToWindow(); updates.observe(updateObserver); store.observeAppearance(appearanceObserver); appearanceRefresh?.invoke() }
+    override fun onAttachedToWindow() { super.onAttachedToWindow(); updates.observe(updateObserver); store.observeAppearance(appearanceObserver); appearanceRefresh?.invoke(); themeRefresh?.invoke(); editingRefresh?.invoke(); Ui.refresh(this) }
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) { super.onConfigurationChanged(newConfig); Ui.refresh(this) }
     override fun onDetachedFromWindow() { updates.remove(updateObserver); store.removeAppearanceObserver(appearanceObserver); super.onDetachedFromWindow() }
     private fun toast(value: String) { Toast.makeText(context, value, Toast.LENGTH_LONG).show() }
 }

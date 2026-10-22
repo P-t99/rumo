@@ -13,15 +13,15 @@ footer{font-size:12px;color:#7a827d}.tag{display:inline-block;background:#ecf7f0
 </style>
 <main><div class="brand">入墨 · FLOMO CAPTURE</div><h1>随时记录，回到 flomo。</h1>
 <p>在当前应用上方写下想法，直接存入自己的 flomo。</p>
-<section class="card"><span class="tag">Android · 0.3.0</span><h2 style="margin-top:18px">两种悬浮入口，自由调节透明度</h2>
-<ul><li>贴边竖条与悬浮球随时切换，分别记住位置。</li><li>透明度 0–80%，即时生效并自动保存。</li><li>编辑窗口保持清晰，支持轻左滑和双击标题 / 空白处收起，继续保留快捷标签与默认标签。</li></ul>
-<a class="button" href="releases/Rumo-Flomo-0.3.0.apk">下载 Android 安装包</a>
-<p><small>在维护者分发的原版本上覆盖安装即可保留本地数据。最低 Android 8.0。安装后请按下方步骤保存新更新源地址。</small></p></section>
-<section class="card"><h2>切换到新的更新源</h2>
-<ol><li>打开入墨 → 设置 → 版本与更新。</li><li>将下方地址填入“更新源地址”，点击“保存更新设置”。</li><li>当前为 0.3.0 时会提示已是最新版本；旧版本可点击下载，再按系统提示确认安装。</li><li>后续继续使用此地址检查更新，原 API、草稿和标签保持不变。</li></ol>
-<pre><code id="feed">https://rumo.hirkond.online/latest.json</code></pre>
+<section class="card"><span class="tag">Android · 0.4.8</span><h2 style="margin-top:18px">修复选词后菜单不可见</h2>
+<ul><li>修复可以选字却看不到、点不到编辑菜单的问题，菜单现显示在白色卡片上方。若此前开启常驻工具栏，请先在设置关闭，再测试长按菜单。</li><li>长按选词后在选区附近显示全选、复制、剪切和粘贴；长按空白正文或光标处可粘贴。</li><li>默认没有常驻编辑栏；“设置 → 文字编辑”可开启“始终显示编辑工具栏”，选择自动保存。输入或再次点正文时收起菜单，草稿、焦点和布局保留。</li><li>浅色、深色、跟随系统三种主题，选择自动保存；切换保留正在编辑的内容和窗口布局。</li><li>展开自动聚焦正文并弹出键盘，有草稿时从末尾继续写；点到窗外可继续使用其他应用的输入框。</li><li>拖动顶部圆点移动，右下角缩放；尺寸与位置自动记住，支持一键重置。</li><li>默认窗口位于上方，为键盘留出空间；放得下时，键盘开合不改变窗口大小和位置。</li><li>保留贴边竖条 / 悬浮球、透明度调节、快捷标签、默认标签及本地草稿。</li></ul>
+<a class="button" href="releases/Rumo-Flomo-0.4.8.apk">下载 0.4.8 安装包</a>
+<p><small>在维护者分发的原版本上覆盖安装即可保留本地数据。最低 Android 8.0。原配置和草稿保留；已有窗口布局会继续沿用，可点“重置”采用上方默认布局。</small></p></section>
+<section class="card"><h2>在 APP 内更新</h2>
+<ol><li>打开入墨 → 设置 → 版本与更新。</li><li>将下方地址填入“更新源地址”，点击“保存更新设置”。</li><li>点击“检查更新”，旧版本会显示 0.4.8；下载后按系统提示确认覆盖安装。</li><li>后续继续使用此地址检查更新，原 API、草稿和标签保持不变。已安装 0.4.8 时会显示当前已是最新版本。</li></ol>
+<pre><code id="feed">https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json</code></pre>
 <button id="copy">复制更新源地址</button><p id="feedback" aria-live="polite"></p>
 <p><small>已下载的有效安装包会复用。取消安装后，再次点击会继续安装，无需重复下载。</small></p></section>
-<section class="card"><h2>安装包校验</h2><p>SHA-256</p><pre><code id="sha">b17233ec3c6bd944895b88caf77131f8af5d2cb7a9137e3f47a1b37e67e43a29</code></pre><p><small>应用会核对安装包的 SHA-256、包名、版本和签名。更新通道不接收个人 flomo API 或笔记内容。</small></p></section>
+<section class="card"><h2>安装包校验</h2><p>SHA-256</p><pre><code id="sha">73fb2ae6f15627db9e84de2f5f4558263fcec3706ac2e07f8c107fe6dcac5020</code></pre><p><small>应用会核对安装包的 SHA-256、包名、版本和签名。更新通道不接收个人 flomo API 或笔记内容。</small></p></section>
 <footer>基于 FloatingX 3.0.0 · 非 flomo 官方客户端 · 个人测试版 · <a href="https://github.com/P-t99/rumo" style="color:inherit">GitHub 开源仓库</a></footer></main>
 <script>document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('feed').textContent);document.getElementById('feedback').textContent='已复制，粘贴到入墨的更新源地址即可。'}catch(e){document.getElementById('feedback').textContent='请长按上方地址复制。'}};</script></html>

@@ -1,8 +1,8 @@
 {
-  "versionCode": 3,
-  "versionName": "0.3.0",
-  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.3.0.apk",
-  "sha256": "b17233ec3c6bd944895b88caf77131f8af5d2cb7a9137e3f47a1b37e67e43a29",
-  "notes": "新增贴边竖条 / 悬浮球切换、0–80% 透明度调节；更短左滑和双击标题 / 空白区域收起。保留 API、草稿与标签。",
-  "minSdk": 26
+  "versionCode": 12,
+  "versionName": "0.4.8",
+  "apkUrl": "https://rumo-flomo-updates.thd20x.chatgpt.site/releases/Rumo-Flomo-0.4.8.apk",
+  "sha256": "73fb2ae6f15627db9e84de2f5f4558263fcec3706ac2e07f8c107fe6dcac5020",
+  "minSdk": 26,
+  "notes": "修复长按能选中文字，却看不到、点不到编辑菜单的问题。菜单现显示在笔记卡片上方；无需新增权限。保留 API、草稿、布局与主题。若此前开启常驻工具栏，请在设置 → 文字编辑关闭该选项，再测试长按菜单。"
 }
