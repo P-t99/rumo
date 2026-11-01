@@ -24,6 +24,8 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ServiceController
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadow.api.Shadow
+import org.robolectric.shadows.ShadowWindowManagerImpl
 import java.time.Duration
 
 @RunWith(RobolectricTestRunner::class)
@@ -70,6 +72,8 @@ class EdgeEntryTest {
                 val close = control("bubble")!!
                 assertTrue(close.isShowing)
                 assertTrue((close.contentView as EdgeTabView).expanded)
+                val windows = Shadow.extract<ShadowWindowManagerImpl>(context.getSystemService(WindowManager::class.java)).views
+                assertSame("The close entry must remain above an overlapping note card", root(close), windows.last())
                 assertEquals(position.x, close.position.x, 1f); assertEquals(position.y, close.position.y, 1f)
                 assertEquals(FxDrag.DISABLED, close.config.gesture.drag)
                 val flags = root(close).windowParams.flags
