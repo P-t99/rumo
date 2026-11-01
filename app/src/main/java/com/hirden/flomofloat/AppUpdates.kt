@@ -51,7 +51,7 @@ class AppUpdates private constructor(context: Context) {
     @Volatile var release: AppRelease? = runCatching { AppRelease.parse(prefs.getString("release", "").orEmpty()) }.getOrNull(); private set
     @Volatile var downloaded = false; private set
     private var polling = false
-    val feed: String get() = prefs.getString("feed", null)?.takeIf { it.isNotBlank() } ?: UpdateChannel.DEFAULT_FEED_URL
+    val feed: String get() = UpdateChannel.resolve(prefs.getString("feed", null))
     val autoCheck: Boolean get() = prefs.getBoolean("auto", true)
     val available: AppRelease? get() = release?.takeIf { it.code > BuildConfig.VERSION_CODE && it.minSdk <= Build.VERSION.SDK_INT }
     val downloadId: Long get() = prefs.getLong("download_id", -1)
