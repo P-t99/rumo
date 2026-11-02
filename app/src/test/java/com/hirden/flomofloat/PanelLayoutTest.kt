@@ -153,6 +153,35 @@ class PanelLayoutTest {
             assertTrue(scroll.getChildAt(0).height > scroll.height)
         } finally { serviceController.destroy() }
     }
+    @Test fun enlargingPanelGivesTheExtraHeightToTheEditableBody() {
+        val controller = Robolectric.buildService(CaptureService::class.java).create()
+        val service = controller.get()
+        try {
+            call(service, "expand")
+            val view = panel(service) as ViewGroup
+            val input = view.findViewById<EditText>(R.id.note_input)
+            input.setText("窗口放大后可继续在下方输入")
+            val start = input.selectionStart
+            fun layout(height: Int) {
+                view.measure(View.MeasureSpec.makeMeasureSpec(Ui.dp(activity, 360), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(Ui.dp(activity, height), View.MeasureSpec.EXACTLY))
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            }
+            layout(400)
+            val originalInputHeight = input.height
+            val tagsHeight = view.findViewById<EditText>(R.id.note_tags).height
+            val footerHeight = view.getChildAt(view.childCount - 1).height
+            layout(620)
+            assertEquals(Ui.dp(activity, 220), input.height - originalInputHeight)
+            assertEquals(tagsHeight, view.findViewById<EditText>(R.id.note_tags).height)
+            assertEquals(footerHeight, view.getChildAt(view.childCount - 1).height)
+            assertEquals("窗口放大后可继续在下方输入", input.text.toString())
+            assertEquals(start, input.selectionStart)
+            assertTrue(input.hasFocus())
+            layout(400)
+            assertEquals(originalInputHeight, input.height)
+        } finally { controller.destroy() }
+    }
     private fun findButton(view: View, label: String): Button? {
         if (view is Button && view.text.toString() == label) return view
         if (view is ViewGroup) for (i in 0 until view.childCount) findButton(view.getChildAt(i), label)?.let { return it }

@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 
 /** A curved edge handle and its in-place close button share one fixed touch area. */
-class EdgeTabView(context: Context) : View(context) {
+class EdgeTabView(context: Context, val mode: OverlayMode = OverlayMode.EDGE) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val path = Path()
     private val location = IntArray(2)
@@ -17,13 +17,14 @@ class EdgeTabView(context: Context) : View(context) {
     var expanded: Boolean = false
         set(value) {
             field = value
-            contentDescription = if (value) "收起入墨笔记，草稿自动保存" else "入墨弧形悬浮条，点击写笔记，拖动调整位置"
+            contentDescription = if (value) "收起入墨笔记，草稿自动保存" else "入墨${mode.label}，点击写笔记，拖动调整位置"
             invalidate()
         }
     init {
         Ui.bind(this, "paint") { primary = it[Ui.primary]; foreground = it[Ui.onPrimary]; invalidate() }
         expanded = false
-        layoutParams = ViewGroup.LayoutParams(Ui.dp(context, 40), Ui.dp(context, 72))
+        layoutParams = ViewGroup.LayoutParams(Ui.dp(context, if (mode == OverlayMode.HORIZONTAL) 72 else 40),
+            Ui.dp(context, if (mode == OverlayMode.HORIZONTAL) 40 else 72))
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
     }
     override fun onDraw(canvas: Canvas) {
@@ -40,6 +41,13 @@ class EdgeTabView(context: Context) : View(context) {
             val arm = 5f * density
             canvas.drawLine(cx - arm, cy - arm, cx + arm, cy + arm, paint)
             canvas.drawLine(cx + arm, cy - arm, cx - arm, cy + arm, paint)
+            return
+        }
+        if (mode == OverlayMode.VERTICAL || mode == OverlayMode.HORIZONTAL) {
+            paint.style = Paint.Style.STROKE; paint.strokeWidth = 5f * density
+            val cx = width / 2f; val cy = height / 2f; val arm = 24f * density
+            if (mode == OverlayMode.VERTICAL) canvas.drawLine(cx, cy - arm, cx, cy + arm, paint)
+            else canvas.drawLine(cx - arm, cy, cx + arm, cy, paint)
             return
         }
         getLocationOnScreen(location)

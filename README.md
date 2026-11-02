@@ -7,7 +7,7 @@
 Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
-- 当前源码版本：**0.4.9 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.9
+- 当前源码版本：**0.4.10 测试版**，支持 Android 8.0 及以上；修复键盘交接与正文缩放，支持四种入口样式
 - 许可：[MIT](LICENSE)
 - [下载入墨](https://rumo.hirkond.online/) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md) · [开发交接](docs/HANDOFF.md)
 
@@ -21,13 +21,13 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 | --- | --- |
 | 悬浮速记 | 在其他 APP 上方记录文字与标签，一键存入 flomo |
 | 文字编辑 | 长按选词后显示菜单，长按光标处粘贴；常驻工具栏为可选兼容模式，默认关闭 |
-| 两种入口 | 弧形贴边条 / 悬浮球，分别记住位置；弧形条左右自动镜像 |
+| 四种入口 | 弧形贴边条 / 直竖条 / 直横条 / 悬浮球，分别记住位置；弧形条左右自动镜像 |
 | 入口透明度 | 0–80%，即时保存；编辑窗口保持清晰 |
 | 快速收起 | 贴边条展开后原位变为 ×，点击保存草稿并收起；保留按钮、轻左滑、双击标题或空白 |
 | 标签记忆 | 三个快捷标签可改，默认标签自动填入新笔记 |
 | 本地草稿 | 自动保存，发送失败保留；成功后清除对应草稿 |
 | 悬浮设置 | 在原窗口修改设置，返回继续编辑 |
-| 窗口布局 | 顶部圆点拖动位置、右下角拖动缩放，笔记 / 设置与横竖屏分别记忆 |
+| 窗口布局 | 顶部圆点拖动位置、右下角拖动缩放；正文跟随放大，笔记 / 设置与横竖屏分别记忆 |
 | 稳定布局 | 默认窗口位于上方，为底部键盘预留空间；已经放得下的布局在键盘开合时保持不动，放不下才临时调整 |
 | 外观主题 | 浅色、深色、跟随系统三种模式，即时生效并保存；切换不重建编辑窗口 |
 | 输入焦点 | 展开笔记自动聚焦正文并弹出键盘，点击窗外释放焦点；再点正文即可继续记笔记 |
@@ -38,14 +38,14 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 
 ## 安装使用
 
-1. 从[下载页](https://rumo-flomo-updates.thd20x.chatgpt.site)下载安装包。
+1. 从[下载页](https://rumo.hirkond.online/)下载安装包。
 2. 从 [flomo API 页面](https://flomoapp.com/mine?source=incoming_webhook)复制个人 incoming webhook。官方 API 需要相应会员权限，详见[官方说明](https://help.flomoapp.com/advance/api.html)。
 3. 在入墨中粘贴地址并保存，点击“开始悬浮速记”，授权系统悬浮窗。
-4. 返回正在使用的 APP，点击竖条或悬浮球，写下内容并点击“存入 flomo”。
+4. 返回正在使用的 APP，点击悬浮条或悬浮球，写下内容并点击“存入 flomo”。
 
 已有维护者分发的测试版时，直接覆盖安装同一渠道的新版本可保留配置和草稿，不要先卸载。部分手机还需允许后台运行。
 
-更新通道现使用原站地址 `https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json`。如 APP 内仍填有自有域名，请在“设置 → 版本与更新”保存此地址一次，再检查更新；已使用原站地址的用户无需修改。0.4.4 起内置默认更新源恢复为原站；用户已保存的自定义源优先，覆盖安装保留该设置。
+更新源为 `https://rumo.hirkond.online/latest.json`。在“设置 → 版本与更新”保存该完整地址，再检查更新。0.4.9 起空白及原默认源自动迁移至此域名；其他已保存的自定义 HTTPS 源仍优先，覆盖安装保留设置。
 
 展开后拖动左上方圆点可移动窗口，拖动右下角斜线可改变宽高，松手后自动保存。输入法避让不会覆盖记住的大小；浮动 / 分离式输入法可能不提供占用区域信息，可手动移动或缩放窗口。点击标题栏“重置”会清除笔记、设置两类窗口的横竖屏布局记忆。
 

@@ -11,6 +11,7 @@ import com.petterp.floatingx.system.container.FxWindowContainer
 
 /** Input ownership starts on opening a note or touching an editor, and ends outside the panel. */
 class OverlayInputController(private val container: FxWindowContainer, ids: IntArray,
+    private val isCloseEntryTouch: (MotionEvent) -> Boolean = { false },
     private val dismissTextActions: () -> Boolean = { false }
 ) {
     private val fields: List<View> = ids.map { container.contentView?.findViewById<View>(it) }.filterNotNull()
@@ -38,7 +39,9 @@ class OverlayInputController(private val container: FxWindowContainer, ids: IntA
             if (event.actionMasked == MotionEvent.ACTION_OUTSIDE) {
                 // This is a separate notification; the original touch still reaches the other app.
                 // Do not issue an IME hide after the other app may already have started input.
-                releaseInput(hideKeyboard = false)
+                // The separate, non-focusable × is part of this overlay. Keep the
+                // editor as IME target until its click removes the window in one step.
+                if (!isCloseEntryTouch(event)) releaseInput(hideKeyboard = false)
                 true
             } else false
         }
@@ -103,7 +106,12 @@ class OverlayInputController(private val container: FxWindowContainer, ids: IntA
         if (closed) return
         closed = true
         if (container.viewTreeObserver.isAlive) container.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocus)
-        releaseInput(hideKeyboard = true)
+        editing = false; generation++
+        pending?.let(container::removeCallbacks); pending = null
+        activeField = null
+        // The caller removes the window immediately after this. Do not hide the
+        // IME or change focus/flags first: the underlying editor may still need
+        // the same keyboard, and hide-then-restore causes a visible screen jump.
         fields.forEach { it.setOnTouchListener(null) }
         container.setOnTouchListener(null); container.onImeBack = null
     }

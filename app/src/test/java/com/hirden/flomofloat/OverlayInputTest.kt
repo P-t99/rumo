@@ -143,11 +143,30 @@ class OverlayInputTest {
         oldField.setText("未完草稿")
         call("collapse"); call("expand")
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
-        active(root()); assertFalse(oldField.hasFocus())
+        active(root()); assertFalse(oldField.isAttachedToWindow)
         val newField = root().findViewById<EditText>(R.id.note_input)
         assertTrue(newField.hasFocus())
         assertEquals("未完草稿", newField.text.toString())
         assertEquals(newField.length(), newField.selectionStart)
+    }
+    @Test fun closingActivePanelHandsOffVisibleKeyboardWithoutHideOrRefocus() {
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+        val root = root(); measure(root)
+        val field = root.findViewById<EditText>(R.id.note_input)
+        val attachInfo = org.robolectric.util.ReflectionHelpers.getField<Any>(root, "mAttachInfo")
+        org.robolectric.util.ReflectionHelpers.setField(attachInfo, "mHasWindowFocus", true)
+        assertTrue(root.hasWindowFocus())
+        val imm = service.getSystemService(InputMethodManager::class.java)
+        imm.showSoftInput(field, 0)
+        val changes = mutableListOf<Boolean>()
+        shadowOf(imm).setSoftInputVisibilityHandler { changes.add(it) }
+        val flags = root.windowParams.flags
+        call("collapse")
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+        assertTrue("Closing must not hide an already-visible IME before focus handoff", changes.isEmpty())
+        assertTrue(shadowOf(imm).isSoftInputVisible)
+        assertEquals("Detach directly without an intermediate focusability change", flags, root.windowParams.flags)
+        assertFalse(field.isAttachedToWindow)
     }
     @Test fun openingThenImmediatelyTouchingOutsideCancelsInitialKeyboardRequest() {
         val root = root(); measure(root)
