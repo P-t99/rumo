@@ -1,8 +1,8 @@
 {
-  "versionCode": 14,
-  "versionName": "0.4.10",
-  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.10.apk",
-  "sha256": "414d4e827e0cac5a5681992606d83f42a573cc17889623180d77ee10abae3b19",
+  "versionCode": 15,
+  "versionName": "0.4.11",
+  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.11.apk",
+  "sha256": "11675c4a840c69b74b29a30528ba86e559723badc17e23be6909fab5b282eec9",
   "minSdk": 26,
-  "notes": "优化输入法已打开时点击 × 的焦点交接，移除主动隐藏后再恢复键盘的路径。放大窗口时正文可编辑区域同步增加，标签和按钮保持紧凑。设置中可选弧形条、直竖条、直横条和悬浮球，条形均支持原位 ×，分别记忆位置。同签名覆盖安装，保留 API、草稿、标签、布局和主题。"
+  "notes": "恢复旧版紧贴屏幕边缘的竖条，移除横条；可选弧形悬浮条、贴边竖条和悬浮球。调整窗口收起流程，输入法闪动效果仍待小米实机复测。保留正文随窗口放大、原位 × 收起及其他功能。沿用原签名，覆盖安装保留 API、草稿、标签、布局和主题。"
 }
