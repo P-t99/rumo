@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.view.View
 import android.view.ViewGroup
+import com.petterp.floatingx.system.container.FxWindowContainer
 
 /** A curved edge handle and its in-place close button share one fixed touch area. */
 class EdgeTabView(context: Context, val mode: OverlayMode = OverlayMode.EDGE) : View(context) {
@@ -44,7 +45,10 @@ class EdgeTabView(context: Context, val mode: OverlayMode = OverlayMode.EDGE) : 
             return
         }
         getLocationOnScreen(location)
-        val leftEdge = location[0] + width / 2 < resources.displayMetrics.widthPixels / 2
+        // The host tracks the latest drag/adsorb coordinates before WindowManager
+        // delivers the next window-frame update to getLocationOnScreen.
+        val x = (parent as? FxWindowContainer)?.contentPositionOnScreen()?.x ?: location[0].toFloat()
+        val leftEdge = x + width / 2f < resources.displayMetrics.widthPixels / 2f
         if (mode == OverlayMode.VERTICAL) {
             // Restore the original 6 × 48 dp pill flush with the screen edge.
             // Keep a wider transparent hit area so the in-place × remains easy to tap.
