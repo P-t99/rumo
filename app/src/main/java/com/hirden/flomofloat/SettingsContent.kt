@@ -188,15 +188,17 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
     private fun addAppearance() {
         val panel = card("悬浮入口")
         val initial = store.appearance()
-        val modes = android.widget.RadioGroup(context).apply { orientation = HORIZONTAL; isSaveEnabled = false }
-        for ((id, label) in listOf(R.id.mode_edge to "弧形悬浮条", R.id.mode_ball to "悬浮球")) {
+        val choices = listOf(R.id.mode_edge to OverlayMode.EDGE, R.id.mode_vertical to OverlayMode.VERTICAL,
+            R.id.mode_horizontal to OverlayMode.HORIZONTAL, R.id.mode_ball to OverlayMode.BALL)
+        val modes = android.widget.RadioGroup(context).apply { orientation = VERTICAL; isSaveEnabled = false }
+        for ((id, mode) in choices) {
             modes.addView(android.widget.RadioButton(context).apply {
-                this.id = id; text = label; textSize = 14f; Ui.textColor(this, Ui.ink); isSaveEnabled = false
+                this.id = id; text = mode.label; textSize = 14f; Ui.textColor(this, Ui.ink); isSaveEnabled = false
                 Ui.control(this)
                 minHeight = Ui.dp(context, 48)
-            }, LayoutParams(0, Ui.dp(context, 48), 1f))
+            }, LayoutParams(-1, Ui.dp(context, 48)))
         }
-        modes.check(if (initial.mode == OverlayMode.EDGE) R.id.mode_edge else R.id.mode_ball)
+        modes.check(choices.first { it.second == initial.mode }.first)
         Ui.add(panel, modes, 5)
         val caption = Ui.text(context, "透明度：${initial.transparency}%", 13f)
         Ui.add(panel, caption, 9)
@@ -214,7 +216,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
             rendering = true
             try {
                 val value = store.appearance()
-                modes.check(if (value.mode == OverlayMode.BALL) R.id.mode_ball else R.id.mode_edge)
+                modes.check(choices.first { it.second == value.mode }.first)
                 seek.progress = value.transparency
                 caption.text = "透明度：${value.transparency}%"
                 preview.removeAllViews()
@@ -224,7 +226,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         }
         fun applySelection() {
             if (rendering) return
-            val mode = if (modes.checkedRadioButtonId == R.id.mode_ball) OverlayMode.BALL else OverlayMode.EDGE
+            val mode = choices.first { it.first == modes.checkedRadioButtonId }.second
             store.saveAppearance(FloatingAppearance(mode, seek.progress))
             render()
         }

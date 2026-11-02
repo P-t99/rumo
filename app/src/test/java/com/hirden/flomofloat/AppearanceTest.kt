@@ -52,6 +52,21 @@ class AppearanceTest {
         assertTrue(settings.findViewById<android.widget.RadioButton>(R.id.mode_ball).isChecked)
         assertEquals(55, settings.findViewById<SeekBar>(R.id.floating_transparency).progress)
     }
+    @Test fun allFourStylesCanBeSelectedAndRetainTheirPreferenceOnReopening() {
+        for ((id, mode) in listOf(R.id.mode_edge to OverlayMode.EDGE, R.id.mode_vertical to OverlayMode.VERTICAL,
+            R.id.mode_horizontal to OverlayMode.HORIZONTAL, R.id.mode_ball to OverlayMode.BALL)) {
+            val settings = SettingsContent(activity, store) {}
+            activity.setContentView(settings)
+            settings.findViewById<android.widget.RadioButton>(id).performClick()
+            assertEquals(mode, LocalStore(activity).appearance().mode)
+            assertTrue(SettingsContent(activity, store) {}.findViewById<android.widget.RadioButton>(id).isChecked)
+            val entry = FloatingAppearance(mode).createEntry(activity)
+            assertTrue(entry.contentDescription.toString().contains(mode.label))
+            if (mode == OverlayMode.VERTICAL) assertTrue(entry.layoutParams.height > entry.layoutParams.width)
+            if (mode == OverlayMode.HORIZONTAL) assertTrue(entry.layoutParams.width > entry.layoutParams.height)
+        }
+        assertEquals(4, OverlayMode.entries.map { it.positionKey }.distinct().size)
+    }
     @Test fun transparencyCannotMakeEntryInvisible() {
         assertEquals(.2f, FloatingAppearance(OverlayMode.BALL, 80).opacity, .001f)
         assertEquals(1f, FloatingAppearance(OverlayMode.EDGE, 0).opacity, .001f)

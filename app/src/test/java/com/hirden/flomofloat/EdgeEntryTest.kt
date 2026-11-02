@@ -107,6 +107,28 @@ class EdgeEntryTest {
         control("bubble")!!.contentView!!.performClick(); idle()
         assertNull(control("editor"))
     }
+    @Test fun touchingCloseEntryDoesNotReleaseInputBeforeItsClickRemovesThePanel() {
+        for (mode in listOf(OverlayMode.EDGE, OverlayMode.VERTICAL, OverlayMode.HORIZONTAL)) {
+            store.saveAppearance(FloatingAppearance(mode)); idle(); tapEntry()
+            val panel = root(control("editor")!!)
+            val field = panel.findViewById<EditText>(R.id.note_input)
+            field.setText("键盘不闪，草稿保留")
+            val entry = root(control("bubble")!!)
+            val location = IntArray(2); entry.getLocationOnScreen(location)
+            val panelLocation = IntArray(2); panel.getLocationOnScreen(panelLocation)
+            val x = location[0] + entry.width / 2f; val y = location[1] + entry.height / 2f
+            MotionEvent.obtain(0, 20, MotionEvent.ACTION_OUTSIDE, x, y, 0).let {
+                it.offsetLocation(-panelLocation[0].toFloat(), -panelLocation[1].toFloat())
+                panel.dispatchTouchEvent(it); it.recycle()
+            }
+            assertEquals(0, panel.windowParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            assertTrue(field.hasFocus())
+            assertEquals(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED,
+                panel.windowParams.softInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE)
+            tapEntry()
+            assertNull(control("editor")); assertEquals("键盘不闪，草稿保留", store.draft().text)
+        }
+    }
     @Test fun nativeDrawingShowsAnArcThenACrossWithoutChangingBounds() {
         val view = EdgeTabView(context)
         val width = view.layoutParams.width; val height = view.layoutParams.height

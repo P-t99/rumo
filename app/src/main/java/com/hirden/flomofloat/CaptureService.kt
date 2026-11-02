@@ -19,6 +19,7 @@ import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -109,7 +110,7 @@ class CaptureService : Service() {
     }
     private fun installBubble(show: Boolean = true) {
         val appearance = store.appearance()
-        val expanded = editor != null && appearance.mode == OverlayMode.EDGE
+        val expanded = editor != null && appearance.mode.hasCloseEntry
         val entry = appearance.createEntry(this).also { (it as? EdgeTabView)?.expanded = expanded }
         entry.setOnClickListener { if (editor != null) collapse() else expand() }
         appliedAppearance = appearance
@@ -117,7 +118,7 @@ class CaptureService : Service() {
             view(entry); anchor(FxGravity.CENTER_END)
             margin(top = Ui.dp(this@CaptureService, 48).toFloat(), bottom = Ui.dp(this@CaptureService, 48).toFloat())
             adsorb(FxAdsorb.horizontal(if (appearance.mode == OverlayMode.BALL) FxHalfHide(.08f) else null))
-            persist(FxSpStorage(applicationContext, if (appearance.mode == OverlayMode.EDGE) "rumo_tab_position" else "rumo_bubble_position"))
+            persist(FxSpStorage(applicationContext, appearance.mode.positionKey))
             gesture { drag = if (expanded) FxDrag.DISABLED else FxDrag.IMMEDIATE; longPress = !expanded }
             systemHost(applicationContext) {
                 permission(FxPermissionStrategy.skip())
@@ -125,7 +126,8 @@ class CaptureService : Service() {
                     // Keep the close entry above the IME without taking input focus.
                     it.flags = (it.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL) and WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv()
-                    it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                    it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING or
+                        WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED
                 }
             }
         }.also {
@@ -145,14 +147,14 @@ class CaptureService : Service() {
             current.contentView?.alpha = appearance.opacity
             appliedAppearance = appearance
         } else {
-            val visible = editor == null || appearance.mode == OverlayMode.EDGE
+            val visible = editor == null || appearance.mode.hasCloseEntry
             current.cancel(); bubble = null
             installBubble(show = visible)
         }
     }
     private fun showCloseEntry() {
         val current = bubble ?: return
-        if (appliedAppearance?.mode != OverlayMode.EDGE) return
+        if (appliedAppearance?.mode?.hasCloseEntry != true) return
         // A newly attached editor can cover the old window. Reattach the entry last,
         // restoring its anchor so the close target stays at the handle's position.
         val saved = current.anchor
@@ -168,6 +170,14 @@ class CaptureService : Service() {
             elevation = Ui.dp(this@CaptureService, 12).toFloat()
             layoutParams = ViewGroup.LayoutParams(Ui.dp(this@CaptureService, 360), Ui.dp(this@CaptureService, 360))
         }
+    }
+    private fun isCloseEntryTouch(event: MotionEvent): Boolean {
+        val entry = bubble?.takeIf { editor != null && it.isShowing && appliedAppearance?.mode?.hasCloseEntry == true }
+            ?.contentView?.parent as? View ?: return false
+        val location = IntArray(2)
+        entry.getLocationOnScreen(location)
+        return event.rawX >= location[0] && event.rawX < location[0] + entry.width &&
+            event.rawY >= location[1] && event.rawY < location[1] + entry.height
     }
     private fun addPanelHeader(shell: SwipeLayout, title: String) {
         val header = Ui.row(this)
@@ -200,7 +210,9 @@ class CaptureService : Service() {
             Ui.clearBackground(this); setPadding(0, Ui.dp(this@CaptureService, 12), 0, Ui.dp(this@CaptureService, 8))
             setText(draft.text); setSelection(length())
         }
-        Ui.add(body, input!!, 4)
+        // ScrollView.fillViewport gives surplus height to the body; put that
+        // space into the editor rather than leaving a dead area below the hints.
+        body.addView(input!!, LinearLayout.LayoutParams(-1, -2, 1f).apply { topMargin = Ui.dp(this@CaptureService, 4) })
         tags = Ui.edit(this, "#标签").apply {
             id = R.id.note_tags; contentDescription = "笔记标签"
             inputType = InputType.TYPE_CLASS_TEXT; setSingleLine(true); setText(draft.tags); textSize = 13f
@@ -220,7 +232,7 @@ class CaptureService : Service() {
         Ui.add(body, chips, 4)
         count = Ui.text(this, "${draft.text.length} 字 · 草稿自动保存", 11f, Ui.muted)
         Ui.add(body, count!!, 9)
-        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else if (store.appearance().mode == OverlayMode.EDGE)
+        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else if (store.appearance().mode.hasCloseEntry)
             "点击贴边 ×、轻左滑或双击空白处收起" else "空白处轻左滑或双击收起", 11f, Ui.muted)
         Ui.add(body, status!!, 5)
         val footer = Ui.row(this)
@@ -275,7 +287,8 @@ class CaptureService : Service() {
                     it.flags = (it.flags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS.inv()) or
                         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-                    it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                    it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or
+                        WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED
                 }
                 onBackPressed { if (settingsPage) { closePanel(); expand() } else collapse(); true }
             }
@@ -283,7 +296,8 @@ class CaptureService : Service() {
             it.show(); layout.attach(it)
             panelInput = (shell.parent as? FxWindowContainer)?.let { container ->
                 OverlayInputController(container, intArrayOf(R.id.note_input, R.id.note_tags, R.id.api_input,
-                    R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed)) {
+                    R.id.preset_one, R.id.preset_two, R.id.preset_three, R.id.default_tags, R.id.update_feed),
+                    isCloseEntryTouch = ::isCloseEntryTouch) {
                     panelEditing?.dismissSelection() ?: false
                 }
             }
