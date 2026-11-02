@@ -52,9 +52,9 @@ class AppearanceTest {
         assertTrue(settings.findViewById<android.widget.RadioButton>(R.id.mode_ball).isChecked)
         assertEquals(55, settings.findViewById<SeekBar>(R.id.floating_transparency).progress)
     }
-    @Test fun allFourStylesCanBeSelectedAndRetainTheirPreferenceOnReopening() {
+    @Test fun allThreeStylesCanBeSelectedAndRetainTheirPreferenceOnReopening() {
         for ((id, mode) in listOf(R.id.mode_edge to OverlayMode.EDGE, R.id.mode_vertical to OverlayMode.VERTICAL,
-            R.id.mode_horizontal to OverlayMode.HORIZONTAL, R.id.mode_ball to OverlayMode.BALL)) {
+            R.id.mode_ball to OverlayMode.BALL)) {
             val settings = SettingsContent(activity, store) {}
             activity.setContentView(settings)
             settings.findViewById<android.widget.RadioButton>(id).performClick()
@@ -63,9 +63,8 @@ class AppearanceTest {
             val entry = FloatingAppearance(mode).createEntry(activity)
             assertTrue(entry.contentDescription.toString().contains(mode.label))
             if (mode == OverlayMode.VERTICAL) assertTrue(entry.layoutParams.height > entry.layoutParams.width)
-            if (mode == OverlayMode.HORIZONTAL) assertTrue(entry.layoutParams.width > entry.layoutParams.height)
         }
-        assertEquals(4, OverlayMode.entries.map { it.positionKey }.distinct().size)
+        assertEquals(3, OverlayMode.entries.map { it.positionKey }.distinct().size)
     }
     @Test fun transparencyCannotMakeEntryInvisible() {
         assertEquals(.2f, FloatingAppearance(OverlayMode.BALL, 80).opacity, .001f)
@@ -73,6 +72,15 @@ class AppearanceTest {
         assertTrue(runCatching { store.saveAppearance(FloatingAppearance(transparency = 100)) }.isFailure)
         val entry = FloatingAppearance(OverlayMode.BALL, 60).createEntry(activity)
         assertEquals(.4f, entry.alpha, .001f)
+    }
+    @Test fun removedHorizontalPreferenceFallsBackToEdgeHuggingVerticalWithoutLosingData() {
+        store.saveDraft(Draft("升级保留", "#碎片"))
+        activity.getSharedPreferences("rumo_private", Context.MODE_PRIVATE).edit()
+            .putString("overlay_mode", "HORIZONTAL").putInt("overlay_transparency", 55).commit()
+        assertEquals(FloatingAppearance(OverlayMode.VERTICAL, 55), LocalStore(activity).appearance())
+        val settings = SettingsContent(activity, store) {}
+        assertTrue(settings.findViewById<android.widget.RadioButton>(R.id.mode_vertical).isChecked)
+        assertEquals(Draft("升级保留", "#碎片"), store.draft())
     }
     @Test fun activeServiceAppliesChangesAndShowsEdgeCloseWhileEditing() {
         val controller = Robolectric.buildService(CaptureService::class.java).create()

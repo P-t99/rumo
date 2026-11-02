@@ -189,7 +189,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         val panel = card("悬浮入口")
         val initial = store.appearance()
         val choices = listOf(R.id.mode_edge to OverlayMode.EDGE, R.id.mode_vertical to OverlayMode.VERTICAL,
-            R.id.mode_horizontal to OverlayMode.HORIZONTAL, R.id.mode_ball to OverlayMode.BALL)
+            R.id.mode_ball to OverlayMode.BALL)
         val modes = android.widget.RadioGroup(context).apply { orientation = VERTICAL; isSaveEnabled = false }
         for ((id, mode) in choices) {
             modes.addView(android.widget.RadioButton(context).apply {

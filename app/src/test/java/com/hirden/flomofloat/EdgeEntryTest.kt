@@ -108,7 +108,7 @@ class EdgeEntryTest {
         assertNull(control("editor"))
     }
     @Test fun touchingCloseEntryDoesNotReleaseInputBeforeItsClickRemovesThePanel() {
-        for (mode in listOf(OverlayMode.EDGE, OverlayMode.VERTICAL, OverlayMode.HORIZONTAL)) {
+        for (mode in listOf(OverlayMode.EDGE, OverlayMode.VERTICAL)) {
             store.saveAppearance(FloatingAppearance(mode)); idle(); tapEntry()
             val panel = root(control("editor")!!)
             val field = panel.findViewById<EditText>(R.id.note_input)
@@ -147,5 +147,36 @@ class EdgeEntryTest {
         val palette = AppTheme.palette(context)
         assertEquals(palette[Ui.onPrimary], cross.getPixel(width / 2, height / 2))
         assertEquals(palette[Ui.primary], cross.getPixel(width / 2 + Ui.dp(context, 10), height / 2))
+    }
+    @Test fun legacyVerticalPillTouchesTheLeftAndRightScreenEdges() {
+        store.saveAppearance(FloatingAppearance(OverlayMode.VERTICAL)); idle()
+        val entry = control("bubble")!!
+        val view = entry.contentView!!
+        for (left in listOf(true, false)) {
+            entry.moveTo(if (left) 0f else context.resources.displayMetrics.widthPixels - view.width.toFloat(),
+                Ui.dp(context, 250).toFloat(), false)
+            idle()
+            val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+            view.draw(Canvas(bitmap))
+            val pixels = (0 until bitmap.width).filter { bitmap.getPixel(it, bitmap.height / 2) ushr 24 > 128 }
+            assertEquals(Ui.dp(context, 6), pixels.size)
+            if (left) assertEquals(0, pixels.first()) else assertEquals(bitmap.width - 1, pixels.last())
+            assertEquals(0, bitmap.getPixel(bitmap.width / 2, bitmap.height / 2) ushr 24)
+        }
+    }
+    @Test fun collapsingRetainsTheServedEditorUntilItsWindowActuallyDetaches() {
+        tapEntry()
+        val panel = root(control("editor")!!)
+        val field = panel.findViewById<EditText>(R.id.note_input)
+        field.setText("关闭时保留输入连接")
+        assertTrue(field.isAttachedToWindow)
+        control("bubble")!!.contentView!!.performClick()
+        assertNull(control("editor"))
+        assertTrue("Keep the editor attached during deferred window removal", field.isAttachedToWindow)
+        assertTrue(panel.childCount > 0)
+        idle()
+        assertFalse(field.isAttachedToWindow)
+        assertEquals(0, panel.childCount)
+        assertEquals("关闭时保留输入连接", store.draft().text)
     }
 }

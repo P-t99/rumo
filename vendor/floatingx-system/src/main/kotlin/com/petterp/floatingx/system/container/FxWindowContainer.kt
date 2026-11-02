@@ -192,7 +192,18 @@ public class FxWindowContainer(
     override fun releaseContent() {
         val c = contentView ?: return
         c.removeOnLayoutChangeListener(contentLayoutListener)
-        removeView(c)
+        if (!isAttachedToWm && isAttachedToWindow) {
+            // SystemHost has queued normal window removal. Keep the served view
+            // alive until ViewRoot actually detaches instead of removing the
+            // focused editor in the middle of its input / IME handoff.
+            addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(view: View) {}
+                override fun onViewDetachedFromWindow(view: View) {
+                    removeOnAttachStateChangeListener(this)
+                    removeView(c)
+                }
+            })
+        } else removeView(c)
         contentView = null
         lastW = 0
         lastH = 0

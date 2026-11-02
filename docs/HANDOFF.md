@@ -1,29 +1,30 @@
 # 入墨开发交接
 
-更新于 2026-11-02（北京时间）。当前已发布 **0.4.10 / versionCode 14**，包名 `com.hirden.flomofloat`，Android 8.0+。
+更新于 2026-11-02（北京时间）。最新代码与实机验证包为 **0.4.11 / versionCode 15**；默认下载页及更新源仍为 **0.4.10 / code 14**，暂未向默认源推送验证包。
 
-## 当前结果
+## 用户反馈与当前结论
 
-- 仓库 https://github.com/P-t99/rumo ，本次 PR #3；成功构建源码 `52950766d00abe832f8200be76a7f44e57419197`。
-- 修复 × 收起时主动隐藏 IME 并改变窗口焦点、随后下层输入重新激活键盘的闪动路径。关闭时先取消过期请求、卸监听，直接移除窗口；× 区域的 ACTION_OUTSIDE 不提前释放输入，窗口保留 SOFT_INPUT_STATE_UNCHANGED。真实外部触摸、失焦和返回键释放行为保留。
-- 放大笔记窗口时，fillViewport 内的正文权重分配新增高度；标签、提示与按钮保持紧凑，小窗口可滚动，光标和草稿保留。
-- 设置 → 悬浮入口：弧形、直竖、直横、球四种选择，自动保存并分别记忆位置。三种条形展开均原位 × 收起；旧 EDGE / BALL 偏好和位置键兼容。
-- 下载页 https://rumo.hirkond.online/ ，更新源 https://rumo.hirkond.online/latest.json 。
-- APK https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.10.apk ，2,283,511 字节，SHA-256 `414d4e827e0cac5a5681992606d83f42a573cc17889623180d77ee10abae3b19`。
-- 原证书 SHA-256 `227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`，v2 / v3 独立验证成功；私钥未进入 VPS 或仓库。同签名覆盖安装保留数据。
+- 用户明确不需要横条；希望恢复旧版紧贴屏幕边缘的竖条。已移除横条选项，保留弧形悬浮条、贴边竖条、悬浮球三种。
+- 用户确认收起时仍闪动：× 和底部“收起”均会；打开入墨前原页面有键盘、无键盘都出现。上一版自动测试没有验证出 HyperOS 实机修复，不得宣称问题已解决。
+- 0.4.11 继续调整共用窗口拆除时序：SystemHost 用普通 removeView 替代 removeViewImmediate；FxWindowContainer.releaseContent 在实际窗口摘除之前保留输入框，避免先销毁 IME served view。关闭时仍取消旧键盘请求、卸除监听；外部触摸、返回键及正文缩放继续保留。这是待实机确认的修复候选。
+- 贴边竖条恢复旧版 6 × 48 dp 圆角细条，左右紧贴边缘，保留透明触摸区域和原位 ×。绘制使用宿主最新坐标，避免窗口帧坐标滞后导致左右侧画错。已保存 HORIZONTAL 自动解析为 VERTICAL，透明度及其他数据保留。
 
-## 验证与下一步
+## 已交付与验证
 
-[CI 41383868123](https://github.com/P-t99/rumo/actions/runs/41383868123) 成功，14 套件 / 103 测试，0 失败、错误或跳过；Lint 0 错误、20 警告、1 提示。最终签名 APK 的应用内容与 CI APK 字节一致。公开 APK、下载页与更新源 HTTP 200，版本、大小、MIME、哈希和证书匹配。详细证据和回退见 [PUBLISH_0.4.10.md](PUBLISH_0.4.10.md)。
+- 仓库 https://github.com/P-t99/rumo ，本次 PR #4；成功验证源码 `5f6ce6792d99353c1692ca3a09c2e0c51575a9be`。
+- 测试 APK https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.11-test.apk ，2,283,511 字节。
+- APK SHA-256 `11675c4a840c69b74b29a30528ba86e559723badc17e23be6909fab5b282eec9`。
+- 原证书 SHA-256 `227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`；本地签名，私钥未进入 VPS 或仓库。同签名覆盖安装保留数据。
+- [CI 41385462569](https://github.com/P-t99/rumo/actions/runs/41385462569) 成功：14 套件、106 测试、0 失败 / 错误 / 跳过，Lint 0 错误、20 警告、1 提示。应用内容与成功 CI APK 逐项一致；服务器独立验证 v2/v3、原证书、包名、版本及 APK 公开 GET 的大小 / SHA / MIME / HTTP 200。
+- 详细证据见 [PUBLISH_0.4.11_TEST.md](PUBLISH_0.4.11_TEST.md)。默认 `/latest.json` 字节未改，仍指向 0.4.10；请从测试 APK 链接覆盖安装。
 
-用户设备是小米 17 Pro Max / HyperOS 3.03；目前尚未直接连接。下一步收集实际安装后的反馈，重点为已打开输入法时 × 是否仍抖动、无下层输入框时是否正常收键盘、放大后正文新增区域可编辑，以及四种样式与长按菜单。不要将自动化结果写成小米实测；通过的构建无需无故重做。
+## 下一步
 
-## 发布位置与恢复
+等待小米 17 Pro Max / HyperOS 3.03 的 0.4.11 实机复测：桌面无键盘及微信已有键盘两种场景，分别使用底部收起和 ×；检查闪动、键盘残留及外部继续输入。若仍闪，不要再次把单元测试通过当作实机修复，应进一步获取录屏或非内容型窗口 / IME 时序日志。用户确认表现后，可复用这个已签名 APK 正式推送，无需无故重做构建。
 
-- VPS 静态目录 `/var/www/site-rumo`；本次发布前 0.4.9 页面与接口备份 `/opt/rumo/backups/20261102-0.4.10/`，回退说明见本次发布证据。
-- `/opt/rumo/repo` 是旧工作区，保留不覆盖；继续开发从 GitHub 最新主干检出。VPS 工具：SDK `/opt/android-sdk`，Gradle `/opt/rumo/gradle-8.13`。
-- 0.4.9 起空白及原默认源自动迁移至自有域名；其他自定义源保留。README 已修正过期的原站更新说明。原站仍供旧版本使用，本次仅更新自有域名。
+## 发布与恢复位置
 
-## 远程工具上下文约束
-
-VPS Root 命令每路最多 4,000 字符、文件每页最多 8,000 字符。构建日志留文件，后台任务优先仅查状态，不要传 APK、归档或长 base64 进上下文。fs-import 可把 file 设为当前本地绝对路径；多行用 run-script（interpreter: python3，content: 脚本文本），不要改动网关服务。
+- 默认页 https://rumo.hirkond.online/ ，默认更新源 https://rumo.hirkond.online/latest.json ，服务器静态目录 `/var/www/site-rumo`。
+- 0.4.10 发布前备份 `/opt/rumo/backups/20261102-0.4.10/`；本次只增加版本化测试 APK，没有改动默认页 / 接口，无需回退源。
+- `/opt/rumo/repo` 是旧工作区，保留不覆盖，权威源码以 GitHub 为准。SDK `/opt/android-sdk`，Gradle `/opt/rumo/gradle-8.13`。
+- VPS Root 输出每路最多 4,000 字符、文件每页 8,000 字符；日志留文件，后台状态优先。勿传 APK、归档或长 base64 进上下文；fs-import 的 file 可用本地绝对路径；多行用 run-script 的 interpreter / content。不要改动网关服务。

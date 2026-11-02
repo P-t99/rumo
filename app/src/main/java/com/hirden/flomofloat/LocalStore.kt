@@ -57,7 +57,10 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         apiReadFailed = false
     }
     fun appearance(): FloatingAppearance = FloatingAppearance(
-        OverlayMode.entries.firstOrNull { it.name == prefs.getString("overlay_mode", "EDGE") } ?: OverlayMode.EDGE,
+        when (val saved = prefs.getString("overlay_mode", "EDGE")) {
+            "HORIZONTAL" -> OverlayMode.VERTICAL
+            else -> OverlayMode.entries.firstOrNull { it.name == saved } ?: OverlayMode.EDGE
+        },
         prefs.getInt("overlay_transparency", 20).coerceIn(0, 80)
     )
     fun saveAppearance(value: FloatingAppearance) {
