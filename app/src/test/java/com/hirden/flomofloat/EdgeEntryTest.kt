@@ -164,4 +164,19 @@ class EdgeEntryTest {
             assertEquals(0, bitmap.getPixel(bitmap.width / 2, bitmap.height / 2) ushr 24)
         }
     }
+    @Test fun collapsingRetainsTheServedEditorUntilItsWindowActuallyDetaches() {
+        tapEntry()
+        val panel = root(control("editor")!!)
+        val field = panel.findViewById<EditText>(R.id.note_input)
+        field.setText("关闭时保留输入连接")
+        assertTrue(field.isAttachedToWindow)
+        control("bubble")!!.contentView!!.performClick()
+        assertNull(control("editor"))
+        assertTrue("Keep the editor attached during deferred window removal", field.isAttachedToWindow)
+        assertTrue(panel.childCount > 0)
+        idle()
+        assertFalse(field.isAttachedToWindow)
+        assertEquals(0, panel.childCount)
+        assertEquals("关闭时保留输入连接", store.draft().text)
+    }
 }

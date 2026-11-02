@@ -100,7 +100,9 @@ public class SystemHost private constructor(
         val c = container as FxWindowContainer
         if (!c.isAttachedToWm) return
         try {
-            wm.removeViewImmediate(c)
+            // Normal removal lets ViewRoot finish the current input dispatch and
+            // hand off the IME before destroying its served editor (notably on OEM IMEs).
+            wm.removeView(c)
         } catch (e: IllegalArgumentException) {
             // "View not attached to window manager"：窗口早就没了（进程被 WMS 清过、外部先摘过），
             // 按已摘掉处理即可，重复抛出只会把 cancel() 打断
