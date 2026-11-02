@@ -4,7 +4,7 @@
     <item name="preset_one" type="id" /><item name="preset_two" type="id" /><item name="preset_three" type="id" />
     <item name="default_tags" type="id" /><item name="update_feed" type="id" />
     <item name="mode_edge" type="id" /><item name="mode_ball" type="id" />
-    <item name="mode_vertical" type="id" /><item name="mode_horizontal" type="id" />
+    <item name="mode_vertical" type="id" />
     <item name="floating_transparency" type="id" />
     <item name="resize_handle" type="id" /><item name="reset_panel_layout" type="id" />
     <item name="theme_bindings" type="id" /><item name="main_surface" type="id" />

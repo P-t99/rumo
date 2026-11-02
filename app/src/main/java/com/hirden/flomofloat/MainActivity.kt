@@ -65,7 +65,7 @@ class MainActivity : Activity() {
             stopService(Intent(this, CaptureService::class.java)); mainHandler.postDelayed({ refresh() }, 250)
         }, android.widget.LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = Ui.dp(this@MainActivity, 8) })
         Ui.add(capture, actions, 8)
-        Ui.add(capture, Ui.text(this, "可选择弧形条、直竖条、直横条或悬浮球，点击写笔记，拖动调整位置。展开后可点 ×、轻左滑或双击空白处收起。", 12f, Ui.muted), 12)
+        Ui.add(capture, Ui.text(this, "可选择弧形条、贴边竖条或悬浮球，点击写笔记，拖动调整位置。展开后可点 ×、轻左滑或双击空白处收起。", 12f, Ui.muted), 12)
         draftStatus = Ui.text(this, "", 12f, Ui.muted)
         Ui.add(capture, draftStatus, 9)
         Ui.add(page, SettingsContent(this, store) { installUpdate() }, 16)
