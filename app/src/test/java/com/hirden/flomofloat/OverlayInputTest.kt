@@ -150,6 +150,7 @@ class OverlayInputTest {
         assertEquals(newField.length(), newField.selectionStart)
     }
     @Test fun closingActivePanelHandsOffVisibleKeyboardWithoutHideOrRefocus() {
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
         val root = root(); measure(root)
         val field = root.findViewById<EditText>(R.id.note_input)
         val attachInfo = org.robolectric.util.ReflectionHelpers.getField<Any>(root, "mAttachInfo")
