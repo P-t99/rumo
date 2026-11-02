@@ -61,6 +61,13 @@ class UpdateStorageTest {
         updates.configure("", false)
         assertEquals(UpdateChannel.DEFAULT_FEED_URL, updates().feed)
     }
+    @Test fun legacyUpdateFeedMovesToOwnDomainWithoutChangingCustomSources() {
+        val prefs = context.getSharedPreferences("rumo_updates", Context.MODE_PRIVATE)
+        prefs.edit().putString("feed", "https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json").commit()
+        assertEquals("https://rumo.hirkond.online/latest.json", updates().feed)
+        prefs.edit().putString("feed", "https://example.org/custom.json").commit()
+        assertEquals("https://example.org/custom.json", updates().feed)
+    }
     @Test fun verifiedDownloadIsReusedAfterReopening() {
         val updates = updates()
         updates.refreshDownload(); awaitWorker(updates)

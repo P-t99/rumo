@@ -64,8 +64,36 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         require(value.transparency in 0..80)
         prefs.edit().putString("overlay_mode", value.mode.name).putInt("overlay_transparency", value.transparency).apply()
     }
+    fun themeMode() = ThemeMode.parse(prefs.getString(AppTheme.PREFERENCE, null))
+    fun alwaysShowEditToolbar() = prefs.getBoolean(EDIT_TOOLBAR_PREFERENCE, false)
+    fun saveAlwaysShowEditToolbar(value: Boolean) {
+        check(prefs.edit().putBoolean(EDIT_TOOLBAR_PREFERENCE, value).commit()) { "Local storage unavailable" }
+    }
+    fun saveThemeMode(value: ThemeMode) {
+        check(prefs.edit().putString(AppTheme.PREFERENCE, value.name).commit()) { "Local storage unavailable" }
+    }
     fun observeAppearance(listener: android.content.SharedPreferences.OnSharedPreferenceChangeListener) { prefs.registerOnSharedPreferenceChangeListener(listener) }
     fun removeAppearanceObserver(listener: android.content.SharedPreferences.OnSharedPreferenceChangeListener) { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    private fun panelKey(settings: Boolean, landscape: Boolean) = "panel_${if (settings) "settings" else "note"}_${if (landscape) "landscape" else "portrait"}_"
+    fun panelLayout(settings: Boolean, landscape: Boolean): PanelLayout? {
+        val prefix = panelKey(settings, landscape)
+        if (!prefs.contains(prefix + "width")) return null
+        return runCatching {
+            PanelLayout(prefs.getFloat(prefix + "width", 0f), prefs.getFloat(prefix + "height", 0f),
+                prefs.getFloat(prefix + "x", 0f), prefs.getFloat(prefix + "y", 0f)).takeIf { it.isValid() }
+        }.getOrNull()
+    }
+    fun savePanelLayout(settings: Boolean, landscape: Boolean, value: PanelLayout) {
+        require(value.isValid())
+        val prefix = panelKey(settings, landscape)
+        check(prefs.edit().putFloat(prefix + "width", value.width).putFloat(prefix + "height", value.height)
+            .putFloat(prefix + "x", value.x).putFloat(prefix + "y", value.y).commit())
+    }
+    fun resetPanelLayouts() {
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith("panel_") }.forEach { editor.remove(it) }
+        check(editor.putInt("layout_reset_revision", prefs.getInt("layout_reset_revision", 0) + 1).commit())
+    }
     fun defaultTags(): String = prefs.getString("default_tags", null)
         ?: prefs.getString("draft_tags", "#碎片").orEmpty()
     fun presets(): List<String> = (0..2).map { prefs.getString("preset_$it", listOf("工作", "灵感", "阅读")[it]).orEmpty() }
@@ -94,5 +122,8 @@ class LocalStore(context: Context, private val keySource: (() -> SecretKey)? = n
         get() = prefs.getString("last_status", "") ?: ""
         set(value) { prefs.edit().putString("last_status", value).apply() }
 
-    companion object { private const val KEY_ALIAS = "hirden_flomofloat_api_v1" }
+    companion object {
+        const val EDIT_TOOLBAR_PREFERENCE = "always_show_edit_toolbar"
+        private const val KEY_ALIAS = "hirden_flomofloat_api_v1"
+    }
 }

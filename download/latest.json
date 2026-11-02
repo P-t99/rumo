@@ -1,8 +1,8 @@
 {
-  "versionCode": 3,
-  "versionName": "0.3.0",
-  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.3.0.apk",
-  "sha256": "b17233ec3c6bd944895b88caf77131f8af5d2cb7a9137e3f47a1b37e67e43a29",
-  "notes": "新增贴边竖条 / 悬浮球切换、0–80% 透明度调节；更短左滑和双击标题 / 空白区域收起。保留 API、草稿与标签。",
-  "minSdk": 26
+  "versionCode": 13,
+  "versionName": "0.4.9",
+  "apkUrl": "https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.9.apk",
+  "sha256": "b47f38a32346b4e65a64c26894b5d149c79b54c43d88c0eb56d6107988acba29",
+  "minSdk": 26,
+  "notes": "贴边入口升级为左右镜像的弧形悬浮条；展开笔记或设置后，原位显示 ×，点击保存草稿并收起。保留轻左滑、双击、原收起按钮与文字编辑功能。默认自动更新迁移到 rumo.hirkond.online，原默认更新地址自动兼容，其他自定义源保持不变。同签名覆盖安装，保留 API、草稿、标签、布局和主题，无需新增权限。"
 }

@@ -1,12 +1,12 @@
 # 发布与更新
 
-下载页：https://rumo.hirkond.online
+下载页：https://rumo.hirkond.online/
 
 版本接口：https://rumo.hirkond.online/latest.json
 
-下载页、版本接口和 APK 均由自有域名直接提供。本次域名迁移保留原 0.3.0 安装包、包名、签名和哈希。
+2026-11-02 已在自有 VPS 上线 0.4.9 / versionCode 13。先发布版本化 APK 并验证匿名 HTTPS 下载，再切换版本接口和下载页；原 0.3.0 安装包继续保留。发布证据与回退步骤见 [PUBLISH_0.4.9.md](docs/PUBLISH_0.4.9.md)。
 
-已安装的 0.2.0 / 0.3.0 用户需在“设置 → 版本与更新”中，将更新源保存为上方的新地址。原始 0.3.0 安装包内置旧站地址；本仓库后续构建默认使用新域名。无需为了切换更新源卸载或重新安装应用。
+0.4.9 将空白更新源及原默认地址 `https://rumo-flomo-updates.thd20x.chatgpt.site/latest.json` 解析至上方自有域名，其他自定义源保持原样。尚未升级且仍使用原站的旧版，可直接下载安装 0.4.9，或在“设置 → 版本与更新”中将更新源保存为上方地址一次。不要先卸载，以保留 API、草稿和标签。
 
 下载页源码和版本信息位于 [`download/`](download/README.md)，部署说明见该目录的 README。
 

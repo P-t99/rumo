@@ -59,7 +59,7 @@ class AppearanceTest {
         val entry = FloatingAppearance(OverlayMode.BALL, 60).createEntry(activity)
         assertEquals(.4f, entry.alpha, .001f)
     }
-    @Test fun activeServiceAppliesChangesAndKeepsEntryHiddenWhileEditing() {
+    @Test fun activeServiceAppliesChangesAndShowsEdgeCloseWhileEditing() {
         val controller = Robolectric.buildService(CaptureService::class.java).create()
         val service = controller.get()
         fun control(field: String): FxControl? = CaptureService::class.java.getDeclaredField(field).apply { isAccessible = true }.get(service) as FxControl?
@@ -75,7 +75,8 @@ class AppearanceTest {
             call("expand")
             store.saveAppearance(FloatingAppearance(OverlayMode.EDGE, 70))
             shadowOf(android.os.Looper.getMainLooper()).idle()
-            assertFalse(control("bubble")!!.isShowing)
+            assertTrue(control("bubble")!!.isShowing)
+            assertTrue((control("bubble")!!.contentView as EdgeTabView).expanded)
             assertEquals(1f, control("editor")!!.contentView!!.alpha, .001f)
             assertEquals("不能丢失", store.draft().text)
         } finally { controller.destroy() }

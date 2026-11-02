@@ -1,0 +1,33 @@
+# 发布 0.4.2 到应用内更新通道
+
+0.4.2 已通过 53 项自动化测试、Lint 和 APK 构建，并使用原分发测试证书签名。当前会话没有 `rumo.hirkond.online` 的服务器发布连接，以下文件已准备好；**尚未上线，提交 GitHub 不会自动更新网站**。
+
+## 交给本地 Codex 的任务
+
+读取本机入墨仓库中已有的服务器部署说明，使用现有发布连接，将 `Rumo-0.4.2-app-update.zip` 内的 `download/` 发布到 `https://rumo.hirkond.online`。先核对目标域名的实际站点目录，备份旧版本接口和下载页；先上传并验证 APK，最后原子替换 `latest.json`。完成后从公网重新下载并核对哈希，再报告线上版本。不要更改其他域名服务，不要上传维护者私钥、个人 API 或草稿。
+
+## 文件与校验
+
+- `download/releases/Rumo-Flomo-0.4.2.apk`：原签名安装包，2,250,751 字节。
+- `download/latest.json`：versionCode `6`，versionName `0.4.2`，minSdk `26`。
+- `download/index.html`：新版下载页。
+- APK SHA-256：`8bb89d8ed300379cbbaa698c8f92ab9bf87d16252d9287226765f920a952a8a2`。
+- 签名证书 SHA-256：`227c6a824e56195d9cd797d623d9f57c5c23ef49a1aacf10a7a3af5ae3f9573c`。
+
+发布包内运行 `python3 verify_release.py` 可先检查本地文件；部署后运行 `python3 verify_release.py --online` 校验公开版本接口和实际下载字节。
+
+## 发布顺序
+
+1. 使用本机已有连接，读取目标域名对应的 nginx / 静态站点配置，确认实际目录；不要猜目录或使用其他项目的凭据。
+2. 将原 `latest.json` 和 `index.html` 备份到该服务器的独立备份目录，记录备份路径与恢复命令，保留全部历史 APK。
+3. 将新 APK 上传到临时文件，校验 SHA-256 后原子改名为 `/releases/Rumo-Flomo-0.4.2.apk`。若同名版本文件已经存在且哈希不同，停止并核对，勿覆盖。
+4. 通过公开 HTTPS 下载该版本 APK，核对实际下载哈希与上方一致。确认成功后才进入下一步。
+5. 上传新页面和接口为临时文件，先替换页面，再原子替换 `latest.json`。保持更新接口不缓存；如存在 CDN 缓存，清除该接口缓存。只更新本域名的相关文件。
+6. 运行发布包的线上校验脚本；同时确认不带查询参数的 `https://rumo.hirkond.online/latest.json` 返回 code `6`、版本 `0.4.2`，APK 地址可匿名下载。
+7. 在旧版 APP 内检查更新、下载、确认系统安装，核对版本与 API / 草稿 / 标签保留；取消安装再进入应复用下载文件。真实微信与厂商输入法仍需手机验证。
+
+## 回退
+
+优先原子恢复备份的 `latest.json`，再恢复旧下载页，保留新旧 APK 以避免中断已有下载。恢复后核对公开接口与旧版本安装包地址可用。回退更新接口不会自动降级已安装的 APP。
+
+原始 0.3.0 安装包若仍使用旧站更新源，需要先在 APP 中保存 `https://rumo.hirkond.online/latest.json`；0.4.1 / 0.4.2 源码构建已默认使用此通道。

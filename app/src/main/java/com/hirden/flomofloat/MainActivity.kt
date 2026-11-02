@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +16,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : Activity() {
     private lateinit var store: LocalStore
@@ -23,15 +26,20 @@ class MainActivity : Activity() {
     private var pendingExpand = false
     private var waitingForInstall = false
     private val mainHandler = Handler(Looper.getMainLooper())
+    private lateinit var pageRoot: ScrollView
+    private val themeObserver = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == AppTheme.PREFERENCE) refreshTheme()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(AppTheme.style(this))
         super.onCreate(savedInstanceState)
         store = LocalStore(this)
         waitingForOverlay = savedInstanceState?.getBoolean("waiting") ?: false
         pendingExpand = savedInstanceState?.getBoolean("expand") ?: false
         waitingForInstall = savedInstanceState?.getBoolean("install") ?: false
-        window.statusBarColor = Ui.bg; window.navigationBarColor = Ui.bg
-        val scroll = ScrollView(this).apply { setBackgroundColor(Ui.bg); isFillViewport = true }
+        val scroll = ScrollView(this).apply { id = R.id.main_surface; Ui.background(this, Ui.bg, 0); isFillViewport = true }
+        pageRoot = scroll
         scroll.setOnApplyWindowInsetsListener { view, insets ->
             if (Build.VERSION.SDK_INT >= 30) {
                 val bars = insets.getInsets(android.view.WindowInsets.Type.systemBars())
@@ -46,7 +54,7 @@ class MainActivity : Activity() {
         scroll.addView(page); setContentView(scroll)
         Ui.add(page, Ui.text(this, "入墨", 30f, bold = true), 14)
         Ui.add(page, Ui.text(this, "随时记录，回到 flomo。", 14f, Ui.muted), 7)
-        val capture = Ui.column(this, 16).apply { background = Ui.shape(this@MainActivity, android.graphics.Color.WHITE, 12, Ui.line) }
+        val capture = Ui.column(this, 16).apply { Ui.background(this, Ui.surface, 12, Ui.line) }
         Ui.add(page, capture, 22)
         overlayStatus = Ui.text(this, "", 13f, Ui.muted)
         Ui.add(capture, overlayStatus)
@@ -62,6 +70,8 @@ class MainActivity : Activity() {
         Ui.add(capture, draftStatus, 9)
         Ui.add(page, SettingsContent(this, store) { installUpdate() }, 16)
         Ui.add(page, Ui.text(this, "部分手机需要在系统设置中允许后台运行，才能持续显示悬浮入口。", 12f, Ui.muted), 14)
+        store.observeAppearance(themeObserver)
+        refreshTheme()
         if (intent.action == INSTALL_UPDATE) mainHandler.post { installUpdate() }
     }
     private fun enableBubble(expand: Boolean = false) {
@@ -102,7 +112,7 @@ class MainActivity : Activity() {
             CaptureService.running -> "● 悬浮速记运行中"
             else -> "悬浮权限已开启，可以开始记录"
         }
-        overlayStatus.setTextColor(if (CaptureService.running) Ui.green else Ui.muted)
+        Ui.textColor(overlayStatus, if (CaptureService.running) Ui.green else Ui.muted)
         val draft = store.draft()
         draftStatus.text = (if (draft.text.isBlank()) "草稿自动保存在本机" else "已保留 ${draft.text.length} 字未发送草稿") +
             store.lastStatus.takeIf { it.isNotBlank() }?.let { "\n$it" }.orEmpty()
@@ -110,6 +120,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         if (!::store.isInitialized) return
+        refreshTheme()
         if (waitingForOverlay) {
             waitingForOverlay = false
             if (Settings.canDrawOverlays(this)) mainHandler.post { enableBubble(pendingExpand) }
@@ -126,7 +137,22 @@ class MainActivity : Activity() {
         outState.putBoolean("waiting", waitingForOverlay); outState.putBoolean("expand", pendingExpand); outState.putBoolean("install", waitingForInstall)
         super.onSaveInstanceState(outState)
     }
-    override fun onDestroy() { mainHandler.removeCallbacksAndMessages(null); super.onDestroy() }
+    private fun refreshTheme() {
+        setTheme(AppTheme.style(this))
+        val palette = AppTheme.palette(this)
+        window.statusBarColor = palette[Ui.bg]; window.navigationBarColor = palette[Ui.bg]
+        if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !palette.dark
+            isAppearanceLightNavigationBars = !palette.dark
+        }
+        if (::pageRoot.isInitialized) Ui.refresh(pageRoot)
+    }
+    override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); refreshTheme() }
+    override fun onDestroy() {
+        if (::store.isInitialized) store.removeAppearanceObserver(themeObserver)
+        mainHandler.removeCallbacksAndMessages(null); super.onDestroy()
+    }
     private fun toast(message: String) { Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
     companion object { const val INSTALL_UPDATE = "com.hirden.flomofloat.INSTALL_UPDATE" }
 }

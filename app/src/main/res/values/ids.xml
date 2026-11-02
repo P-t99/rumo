@@ -5,4 +5,11 @@
     <item name="default_tags" type="id" /><item name="update_feed" type="id" />
     <item name="mode_edge" type="id" /><item name="mode_ball" type="id" />
     <item name="floating_transparency" type="id" />
+    <item name="resize_handle" type="id" /><item name="reset_panel_layout" type="id" />
+    <item name="theme_bindings" type="id" /><item name="main_surface" type="id" />
+    <item name="theme_modes" type="id" /><item name="theme_system" type="id" />
+    <item name="theme_light" type="id" /><item name="theme_dark" type="id" />
+    <item name="text_edit_toolbar" type="id" /><item name="text_select_all" type="id" />
+    <item name="text_copy" type="id" /><item name="text_cut" type="id" /><item name="text_paste" type="id" />
+    <item name="always_show_edit_toolbar" type="id" />
 </resources>
