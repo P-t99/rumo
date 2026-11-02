@@ -9,6 +9,7 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
 - 当前源码版本：**0.4.11 测试版**，支持 Android 8.0 及以上；三种入口样式，收起时序继续进行小米实机验证；默认下载通道仍为 0.4.10
 - 许可：[MIT](LICENSE)
+- [0.4.11 实机验证 APK](https://rumo.hirkond.online/releases/Rumo-Flomo-0.4.11-test.apk)：恢复贴边竖条，继续排查收起闪动。覆盖安装后需在小米手机复测。
 - [下载入墨](https://rumo.hirkond.online/) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md) · [开发交接](docs/HANDOFF.md)
 
 <img src="docs/images/features.png" alt="入墨功能示意图" width="560" />
