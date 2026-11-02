@@ -7,9 +7,9 @@
 Rumo is an Android floating quick-note app that sends text and tags directly to your personal flomo incoming webhook.
 
 - 作者：[Hirden Tao / P-t99](https://github.com/P-t99)
-- 当前源码版本：**0.4.8 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.8
+- 当前源码版本：**0.4.9 测试版**，支持 Android 8.0 及以上；下载页和应用内更新接口已发布 0.4.9
 - 许可：[MIT](LICENSE)
-- [下载入墨](https://rumo-flomo-updates.thd20x.chatgpt.site) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md)
+- [下载入墨](https://rumo.hirkond.online/) · [手机验证](TESTING.md) · [版本记录](CHANGELOG.md) · [开发交接](docs/HANDOFF.md)
 
 <img src="docs/images/features.png" alt="入墨功能示意图" width="560" />
 
@@ -21,9 +21,9 @@ Rumo is an Android floating quick-note app that sends text and tags directly to 
 | --- | --- |
 | 悬浮速记 | 在其他 APP 上方记录文字与标签，一键存入 flomo |
 | 文字编辑 | 长按选词后显示菜单，长按光标处粘贴；常驻工具栏为可选兼容模式，默认关闭 |
-| 两种入口 | 贴边竖条 / 悬浮球，分别记住位置 |
+| 两种入口 | 弧形贴边条 / 悬浮球，分别记住位置；弧形条左右自动镜像 |
 | 入口透明度 | 0–80%，即时保存；编辑窗口保持清晰 |
-| 快速收起 | 按钮、轻左滑、双击标题或空白；正文保留双击选词 |
+| 快速收起 | 贴边条展开后原位变为 ×，点击保存草稿并收起；保留按钮、轻左滑、双击标题或空白 |
 | 标签记忆 | 三个快捷标签可改，默认标签自动填入新笔记 |
 | 本地草稿 | 自动保存，发送失败保留；成功后清除对应草稿 |
 | 悬浮设置 | 在原窗口修改设置，返回继续编辑 |

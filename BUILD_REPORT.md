@@ -1,3 +1,17 @@
+# 0.4.9 弧形入口与自有域名更新验证
+
+发布日期：2026-11-02（北京时间），包名 `com.hirden.flomofloat`，versionCode 13。
+
+- 成功源提交 `0405b4eca0ca8f64db507890b9398391fceac484`；[CI 41290020834](https://github.com/P-t99/rumo/actions/runs/41290020834) 完成 `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug`。
+- 14 个套件、99 项测试，0 失败 / 错误 / 跳过；Lint 0 错误、19 条警告、1 条提示。
+- 新增实际触摸切换、反复展开后的入口位置与草稿、窗口挂载顺序、× 无焦点与键盘层级标志、设置 / 模式切换、无障碍点击及原生绘制回归。
+- 签名 APK 与 CI APK 的非 META-INF 条目逐项字节一致；`apksigner` 完整验证 v2 / v3 签名成功，证书与原分发包一致。
+- 最终 APK 2,279,415 字节，SHA-256 `b47f38a32346b4e65a64c26894b5d149c79b54c43d88c0eb56d6107988acba29`；实际包元数据为 0.4.9 / code 13 / minSdk 26 / targetSdk 35。
+- 自有域名的匿名 APK 下载返回 200，大小、哈希与 MIME 正确。发布顺序与回退证据见 [PUBLISH_0.4.9.md](docs/PUBLISH_0.4.9.md)。
+- 未操作用户手机；真实 HyperOS 显示、输入法、安装及长按菜单仍需 [手机验证](TESTING.md)。
+
+---
+
 # 0.4.8 文字菜单遮挡修复验证
 
 日期：2026-10-22。包名 `com.hirden.flomofloat`，versionCode 12。

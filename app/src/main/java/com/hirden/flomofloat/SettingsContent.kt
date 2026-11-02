@@ -189,7 +189,7 @@ class SettingsContent(context: Context, private val store: LocalStore, private v
         val panel = card("悬浮入口")
         val initial = store.appearance()
         val modes = android.widget.RadioGroup(context).apply { orientation = HORIZONTAL; isSaveEnabled = false }
-        for ((id, label) in listOf(R.id.mode_edge to "贴边竖条", R.id.mode_ball to "悬浮球")) {
+        for ((id, label) in listOf(R.id.mode_edge to "弧形悬浮条", R.id.mode_ball to "悬浮球")) {
             modes.addView(android.widget.RadioButton(context).apply {
                 this.id = id; text = label; textSize = 14f; Ui.textColor(this, Ui.ink); isSaveEnabled = false
                 Ui.control(this)

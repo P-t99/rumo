@@ -31,6 +31,7 @@ import android.widget.Toast
 import com.petterp.floatingx.core.FloatingX
 import com.petterp.floatingx.core.FxControl
 import com.petterp.floatingx.core.FxListener
+import com.petterp.floatingx.core.update
 import com.petterp.floatingx.core.gesture.FxDrag
 import com.petterp.floatingx.core.layout.FxAdsorb
 import com.petterp.floatingx.core.layout.FxGravity
@@ -108,17 +109,28 @@ class CaptureService : Service() {
     }
     private fun installBubble(show: Boolean = true) {
         val appearance = store.appearance()
-        val entry = appearance.createEntry(this)
+        val expanded = editor != null && appearance.mode == OverlayMode.EDGE
+        val entry = appearance.createEntry(this).also { (it as? EdgeTabView)?.expanded = expanded }
+        entry.setOnClickListener { if (editor != null) collapse() else expand() }
         appliedAppearance = appearance
         bubble = FloatingX.install(BUBBLE) {
             view(entry); anchor(FxGravity.CENTER_END)
             margin(top = Ui.dp(this@CaptureService, 48).toFloat(), bottom = Ui.dp(this@CaptureService, 48).toFloat())
             adsorb(FxAdsorb.horizontal(if (appearance.mode == OverlayMode.BALL) FxHalfHide(.08f) else null))
             persist(FxSpStorage(applicationContext, if (appearance.mode == OverlayMode.EDGE) "rumo_tab_position" else "rumo_bubble_position"))
-            systemHost(applicationContext) { permission(FxPermissionStrategy.skip()) }
+            gesture { drag = if (expanded) FxDrag.DISABLED else FxDrag.IMMEDIATE; longPress = !expanded }
+            systemHost(applicationContext) {
+                permission(FxPermissionStrategy.skip())
+                layoutParams {
+                    // Keep the close entry above the IME without taking input focus.
+                    it.flags = (it.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL) and WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM.inv()
+                    it.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+                }
+            }
         }.also {
             it.addListener(object : FxListener {
-                override fun onClick(control: FxControl, view: View) { expand() }
+                override fun onClick(control: FxControl, view: View) { view.performClick() }
                 override fun onPositionChanged(control: FxControl, anchor: FxAnchor) { entry.invalidate() }
                 override fun onDrag(control: FxControl, x: Float, y: Float) { entry.invalidate() }
             })
@@ -133,10 +145,21 @@ class CaptureService : Service() {
             current.contentView?.alpha = appearance.opacity
             appliedAppearance = appearance
         } else {
-            val visible = current.isShowing && editor == null
+            val visible = editor == null || appearance.mode == OverlayMode.EDGE
             current.cancel(); bubble = null
             installBubble(show = visible)
         }
+    }
+    private fun showCloseEntry() {
+        val current = bubble ?: return
+        if (appliedAppearance?.mode != OverlayMode.EDGE) return
+        // A newly attached editor can cover the old window. Reattach the entry last,
+        // restoring its anchor so the close target stays at the handle's position.
+        val saved = current.anchor
+        current.cancel(); bubble = null
+        installBubble(show = false)
+        bubble?.update { anchor(saved.gravity, saved.dx, saved.dy) }
+        bubble?.show()
     }
     private fun shell(isSettings: Boolean): SwipeLayout {
         return SwipeLayout(this) { collapse() }.apply {
@@ -197,7 +220,8 @@ class CaptureService : Service() {
         Ui.add(body, chips, 4)
         count = Ui.text(this, "${draft.text.length} 字 · 草稿自动保存", 11f, Ui.muted)
         Ui.add(body, count!!, 9)
-        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else "长按选词，拖动选区 · 空白处轻左滑或双击收起", 11f, Ui.muted)
+        status = Ui.text(this, if (SendManager.busy) "正在存入 flomo…" else if (store.appearance().mode == OverlayMode.EDGE)
+            "点击贴边 ×、轻左滑或双击空白处收起" else "空白处轻左滑或双击收起", 11f, Ui.muted)
         Ui.add(body, status!!, 5)
         val footer = Ui.row(this)
         footer.addView(Ui.button(this, "设置") { showSettings() }.apply { textSize = 13f; setPadding(Ui.dp(this@CaptureService, 9), 0, Ui.dp(this@CaptureService, 9), 0); minimumWidth = 0; minWidth = 0 }, LinearLayout.LayoutParams(-2, Ui.dp(this, 46)))
@@ -265,6 +289,7 @@ class CaptureService : Service() {
             }
             panelEditing = OverlayTextActions(shell as SwipeLayout) { field -> panelInput?.focusEditor(field.id) }
         }
+        showCloseEntry()
     }
     private fun refreshChips() {
         val selected = NoteProtocol.tags(tags?.text.toString()).split(" ").toSet()
@@ -298,7 +323,10 @@ class CaptureService : Service() {
     }
     private fun collapse(persistDraft: Boolean = true) {
         if (persistDraft && !saveDraft()) return
-        closePanel(); settingsPage = false; bubble?.show()
+        closePanel(); settingsPage = false
+        (bubble?.contentView as? EdgeTabView)?.expanded = false
+        bubble?.update { gesture { drag = FxDrag.IMMEDIATE; longPress = true } }
+        bubble?.show()
     }
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
